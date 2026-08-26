@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import ParkModal from './components/ParkModal'
@@ -48,11 +48,9 @@ function App() {
   // 1. 초기 데이터 로드 및 브라우저 GPS 수신
   useEffect(() => {
     async function init() {
-      // 1) 산불 위험도 조회
       const fireData = await getVancouverFireRisk()
       setCurrentFireRisk(fireData)
 
-      // 2) 브라우저 GPS 위치 요청
       let currentPos = { lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' }
 
       if (navigator.geolocation) {
@@ -61,7 +59,6 @@ function App() {
             const gpsLat = pos.coords.latitude
             const gpsLng = pos.coords.longitude
             
-            // 밴쿠버에서 100km 이상 떨어진 곳(예: 한국 등)인지 확인
             const distFromVanc = calculateDistanceKm(gpsLat, gpsLng, 49.2827, -123.1207)
             const isOutsideVancouver = distFromVanc > 100
 
@@ -69,11 +66,10 @@ function App() {
               lat: gpsLat,
               lng: gpsLng,
               isRealGps: true,
-              label: isOutsideVancouver ? `Real GPS (${distFromVanc.toLocaleString()}km away)` : 'Near Vancouver'
+              label: isOutsideVancouver ? `Real GPS (${distFromVanc.toLocaleString()}km)` : 'Near Vancouver'
             }
             setUserLocation(currentPos)
 
-            // 위치 기반으로 공원 데이터 거리 갱신
             const apiParks = await fetchVancouverParks(fireData.riskLevel, currentPos)
             if (apiParks) setParks(apiParks)
           },
@@ -164,7 +160,6 @@ function App() {
     setSearchTerm('')
   }
 
-  // 밴쿠버 시뮬레이션 위치로 전환하는 테스트 버튼용 함수
   const toggleVancouverDowntown = async () => {
     const downtownPos = { lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' }
     setUserLocation(downtownPos)
@@ -174,33 +169,68 @@ function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-200">
-      {/* Navbar */}
+      {/* Navbar: 모바일에서 상하 2줄 분리 배치 */}
       <nav className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50">
-        <div className="max-w-screen-2xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-x-3">
-            <div className="w-10 h-10 bg-emerald-600 rounded-2xl flex items-center justify-center">
-              <span className="text-white text-3xl">🔥</span>
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 md:h-16 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          
+          <div className="flex items-center justify-between w-full md:w-auto">
+            <div className="flex items-center gap-x-2.5">
+              <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-xl">
+                🔥
+              </div>
+              <div>
+                <span className="font-bold text-2xl tracking-tighter">SPARK</span>
+                <span className="font-bold text-2xl tracking-tighter text-emerald-400">&amp; PARK</span>
+              </div>
             </div>
-            <div>
-              <span className="font-bold text-3xl tracking-tighter">SPARK</span>
-              <span className="font-bold text-3xl tracking-tighter text-emerald-400">&amp; PARK</span>
+
+            {/* 모바일 화면용 버튼 묶음 (우측 상단 배치) */}
+            <div className="flex items-center gap-x-2 md:hidden">
+              <button 
+                onClick={() => {
+                  const name = prompt("Enter new park name:")
+                  if (name) {
+                    addNewPark({
+                      name,
+                      lat: 49.27 + (Math.random() - 0.5) * 0.08,
+                      lng: -123.12 + (Math.random() - 0.5) * 0.12,
+                      bbq: Math.random() > 0.5 ? "charcoal" : "gas-only",
+                      risk: currentFireRisk.riskLevel,
+                      facilities: ["restroom", "parking", "picnic"].slice(0, 2 + Math.floor(Math.random() * 2)),
+                      description: "New park added by the community."
+                    })
+                  }
+                }}
+                className="px-3 py-1.5 bg-white text-zinc-900 rounded-2xl text-xs font-semibold"
+              >
+                + Add
+              </button>
+              <button
+                onClick={toggleVancouverDowntown}
+                className="p-1 bg-zinc-800 border border-zinc-700 rounded-full"
+                title="Reset GPS"
+              >
+                <div className="w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center text-[10px] font-bold">JD</div>
+              </button>
             </div>
           </div>
 
-          <div className="flex-1 max-w-md mx-8">
+          {/* 검색창: 모바일에서는 전체 폭 확장 */}
+          <div className="w-full md:flex-1 md:max-w-md md:mx-6">
             <div className="relative">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search parks or neighborhoods..."
-                className="w-full bg-zinc-900 border border-zinc-700 focus:border-emerald-600 pl-11 py-2.5 rounded-3xl text-sm focus:outline-none text-white"
+                className="w-full bg-zinc-950 md:bg-zinc-900 border border-zinc-700 focus:border-emerald-600 pl-10 pr-4 py-2 rounded-2xl text-sm focus:outline-none text-white placeholder-zinc-500"
               />
-              <span className="absolute left-4 top-3 text-zinc-500">🔍</span>
+              <span className="absolute left-3.5 top-2.5 text-zinc-500 text-sm">🔍</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-x-4">
+          {/* 데스크톱용 버튼 목록 */}
+          <div className="hidden md:flex items-center gap-x-4">
             <button 
               onClick={() => {
                 const name = prompt("Enter new park name:")
@@ -216,38 +246,41 @@ function App() {
                   })
                 }
               }}
-              className="px-5 py-2 bg-white text-zinc-900 hover:bg-zinc-100 rounded-3xl text-sm font-semibold flex items-center gap-x-2 active:scale-95 transition-all"
+              className="px-4 py-2 bg-white text-zinc-900 hover:bg-zinc-100 rounded-3xl text-sm font-semibold flex items-center gap-x-2 active:scale-95 transition-all"
             >
               + Add Park
             </button>
 
-            {/* 현재 기준 위치 뱃지 (클릭 시 밴쿠버 다운타운 기준으로 리셋 가능) */}
             <button
               onClick={toggleVancouverDowntown}
               title="Click to reset location to Vancouver Downtown"
               className="flex items-center gap-x-2 bg-zinc-900 border border-zinc-800 hover:border-emerald-600 px-3 py-1.5 rounded-3xl text-sm cursor-pointer transition-all"
             >
-              <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-xs font-bold">JD</div>
+              <div className="w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center text-xs font-bold">JD</div>
               <div className="text-left">
                 <div className="font-medium text-xs">Jisol Kim</div>
-                <div className="text-[10px] text-emerald-400 -mt-0.5 max-w-[130px] truncate">
+                <div className="text-[10px] text-emerald-400 -mt-0.5 max-w-[120px] truncate">
                   📍 {userLocation.label}
                 </div>
               </div>
             </button>
           </div>
+
         </div>
       </nav>
 
-      <div className="max-w-screen-2xl mx-auto px-6 pt-6">
-        <div className="flex items-end justify-between mb-6">
+      {/* Main Content */}
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
+        {/* Banner Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-5xl font-semibold tracking-tighter">Find the perfect spot for BBQ</h1>
-            <p className="text-xl text-zinc-400 mt-2">Real-time wildfire risk • Accurate rules • Local reviews</p>
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">Find the perfect spot for BBQ</h1>
+            <p className="text-sm sm:text-base lg:text-lg text-zinc-400 mt-1 sm:mt-2">Real-time wildfire risk • Accurate rules • Local reviews</p>
           </div>
-          <div className="flex items-center gap-x-3 text-sm">
-            <div className="px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-3xl flex items-center gap-x-2">
-              <span className="text-xs text-zinc-400">Wildfire Risk:</span>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+            <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center gap-x-1.5">
+              <span className="text-zinc-400">Wildfire Risk:</span>
               <span className={`font-semibold capitalize ${
                 currentFireRisk.riskLevel === 'high' ? 'text-red-400' :
                 currentFireRisk.riskLevel === 'moderate' ? 'text-yellow-400' : 'text-emerald-400'
@@ -256,18 +289,21 @@ function App() {
               </span>
             </div>
 
-            <div className="px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-3xl flex items-center gap-x-2">
+            <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center gap-x-1.5">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span>{filteredParks.length} parks online</span>
+              <span>{filteredParks.length} parks</span>
             </div>
-            <div className="px-3 py-2 bg-emerald-900/40 text-emerald-300 border border-emerald-800 rounded-3xl text-xs flex items-center gap-x-1.5">
+
+            <div className="px-3 py-1.5 sm:px-3 sm:py-2 bg-emerald-900/30 text-emerald-300 border border-emerald-800/60 rounded-2xl text-xs">
               BCWS Live Sync
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Filters */}
+        {/* 3단 그리드 레이아웃 (모바일: 1열 세로 스택, PC: 3열 분할) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+          
+          {/* 1. Filters */}
           <div className="lg:col-span-3">
             <Filters 
               filters={filters} 
@@ -276,9 +312,9 @@ function App() {
             />
           </div>
 
-          {/* Map */}
+          {/* 2. Map (모바일 360px, 데스크톱 620px) */}
           <div className="lg:col-span-6">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden" style={{ height: '620px' }}>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl sm:rounded-3xl overflow-hidden h-[360px] sm:h-[480px] lg:h-[620px]">
               <MapContainer 
                 center={[49.2827, -123.1207]} 
                 zoom={12} 
@@ -290,7 +326,6 @@ function App() {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
 
-                {/* 내 GPS 위치 마커 */}
                 {userLocation.isRealGps && (
                   <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
                     <Popup>
@@ -343,29 +378,35 @@ function App() {
                 })}
               </MapContainer>
             </div>
-            <div className="flex justify-between items-center mt-2 px-1 text-xs text-zinc-500">
-              <div className="flex gap-x-4">
-                <div className="flex items-center gap-x-1.5"><span className="text-emerald-500">🔥</span> Charcoal allowed</div>
-                <div className="flex items-center gap-x-1.5"><span className="text-yellow-400">⛽</span> Gas only</div>
-                <div className="flex items-center gap-x-1.5"><span className="text-red-500">🚫</span> Prohibited</div>
+            
+            <div className="flex flex-wrap justify-between items-center mt-2 px-1 text-[11px] sm:text-xs text-zinc-500 gap-y-1">
+              <div className="flex gap-x-3 sm:gap-x-4">
+                <div className="flex items-center gap-x-1"><span className="text-emerald-500">🔥</span> Charcoal</div>
+                <div className="flex items-center gap-x-1"><span className="text-yellow-400">⛽</span> Gas only</div>
+                <div className="flex items-center gap-x-1"><span className="text-red-500">🚫</span> Prohibited</div>
               </div>
-              <div>Live API: Vancouver Open Data + BCWS</div>
+              <div>Vancouver Open Data + BCWS</div>
             </div>
           </div>
 
-          {/* Nearby List */}
-          <div className="lg:col-span-3 bg-zinc-900 border border-zinc-800 rounded-3xl p-5 h-fit">
-            <div className="flex justify-between items-center mb-4 px-1">
+          {/* 3. Nearby List */}
+          <div className="lg:col-span-3 bg-zinc-900 border border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 h-fit">
+            <div className="flex justify-between items-center mb-3 sm:mb-4 px-1">
               <div>
-                <div className="font-semibold">Nearby Parks</div>
-                <div className="text-xs text-emerald-400">
+                <div className="font-semibold text-sm sm:text-base">Nearby Parks</div>
+                <div className="text-[11px] sm:text-xs text-emerald-400">
                   Sorted by distance • {filteredParks.length} results
                 </div>
               </div>
-              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-xs text-emerald-400 hover:text-emerald-300">MAP ↑</button>
+              <button 
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+                className="text-xs text-emerald-400 hover:text-emerald-300"
+              >
+                TOP ↑
+              </button>
             </div>
 
-            <div className="space-y-3 max-h-[540px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[420px] sm:max-h-[540px] overflow-y-auto pr-1">
               {filteredParks.length > 0 ? (
                 filteredParks
                   .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
@@ -378,12 +419,13 @@ function App() {
                     />
                   ))
               ) : (
-                <div className="text-center py-12 text-zinc-500">
+                <div className="text-center py-10 text-zinc-500 text-xs sm:text-sm">
                   No parks match your filters.<br />Try broadening your search.
                 </div>
               )}
             </div>
           </div>
+
         </div>
       </div>
 
@@ -396,7 +438,7 @@ function App() {
         />
       )}
 
-      <footer className="mt-16 border-t border-zinc-900 py-8 text-center text-zinc-500">
+      <footer className="mt-12 sm:mt-16 border-t border-zinc-900 py-6 sm:py-8 text-center text-xs sm:text-sm text-zinc-500 px-4">
         Spark &amp; Park — 2026 Graduation Project • Built with React + Firebase by Jisol Kim • 
         For educational purposes in Vancouver, BC
       </footer>
