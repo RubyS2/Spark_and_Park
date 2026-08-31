@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "searchPlaceholder": "공원 이름 또는 지역 검색...",
+    "addPark": "+ 공원 제보",
+    "add": "+ 제보"
+  },
+  "hero": {
+    "title": "완벽한 밴쿠버 BBQ 공원 찾기",
+    "subtitle": "실시간 산불 위험도 • 정확한 규정 • 현지 리뷰",
+    "wildfireRisk": "산불 위험 등급",
+    "parksCount": "{{count}}개 공원",
+    "liveSync": "BCWS 실시간 연동"
+  },
+  "filters": {
+    "title": "필터",
+    "reset": "전체 초기화",
+    "bbqType": "바비큐 규정",
+    "charcoal": "🔥 숯불 사용 가능",
+    "gasOnly": "⛽ 가스만 가능",
+    "facilities": "편의시설 (시청 인증)",
+    "washrooms": "🚻 공용 화장실",
+    "playground": "🛝 어린이 놀이터",
+    "sports": "⚽ 스포츠 구장 / 코트",
+    "dog": "🐕 반려견 오프리쉬 구역",
+    "wildfireRisk": "산불 위험 등급",
+    "lowRisk": "● 안전 (Low)",
+    "moderate": "● 주의 (Moderate)",
+    "highRisk": "● 위험 / 금지 (High)"
+  },
+  "list": {
+    "title": "가까운 공원 목록",
+    "sortedBy": "거리순 정렬 • {{count}}개 검색됨",
+    "top": "맨위로 ↑",
+    "noParks": "조건에 맞는 공원이 없습니다.\n필터를 변경해 보세요."
+  },
+  "popup": {
+    "charcoalGas": "숯불 + 가스 가능",
+    "gasOnly": "가스 버너만 가능",
+    "noBbq": "바비큐 불가",
+    "risk": "위험도",
+    "getDirections": "🗺️ 길찾기"
+  }
+}

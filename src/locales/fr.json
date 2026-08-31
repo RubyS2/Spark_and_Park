@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "searchPlaceholder": "Rechercher des parcs ou quartiers...",
+    "addPark": "+ Ajouter",
+    "add": "+ Ajouter"
+  },
+  "hero": {
+    "title": "Trouvez l'endroit idéal pour un barbecue",
+    "subtitle": "Risque d'incendie en temps réel • Règles précises • Avis locaux",
+    "wildfireRisk": "Risque d'incendie",
+    "parksCount": "{{count}} parcs",
+    "liveSync": "Synchro BCWS"
+  },
+  "filters": {
+    "title": "Filtres",
+    "reset": "Réinitialiser",
+    "bbqType": "Type de barbecue",
+    "charcoal": "🔥 Charbon autorisé",
+    "gasOnly": "⛽ Gaz uniquement",
+    "facilities": "Équipements (Vérifiés)",
+    "washrooms": "🚻 Toilettes",
+    "playground": "🛝 Aire de jeux",
+    "sports": "⚽ Terrains de sport",
+    "dog": "🐕 Parc à chiens",
+    "wildfireRisk": "Niveau de risque d'incendie",
+    "lowRisk": "● Risque faible",
+    "moderate": "● Modéré",
+    "highRisk": "● Élevé / Extrême"
+  },
+  "list": {
+    "title": "Parcs à proximité",
+    "sortedBy": "Trié par distance • {{count}} résultats",
+    "top": "HAUT ↑",
+    "noParks": "Aucun parc ne correspond à vos critères."
+  },
+  "popup": {
+    "charcoalGas": "Charbon + Gaz",
+    "gasOnly": "Gaz uniquement",
+    "noBbq": "Barbecue interdit",
+    "risk": "Risque",
+    "getDirections": "🗺️ Itinéraire"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "searchPlaceholder": "ਪਾਰਕ ਜਾਂ ਇਲਾਕਾ ਖੋਜੋ...",
+    "addPark": "+ ਪਾਰਕ ਜੋੜੋ",
+    "add": "+ ਜੋੜੋ"
+  },
+  "hero": {
+    "title": "BBQ ਲਈ ਵਧੀਆ ਪਾਰਕ ਲੱਭੋ",
+    "subtitle": "ਜੰਗਲ ਦੀ ਅੱਗ ਦਾ ਖਤਰਾ • ਨਿਯਮ • ਸਥਾਨਕ ਸਮੀਖਿਆਵਾਂ",
+    "wildfireRisk": "ਅੱਗ ਦਾ ਖ਼ਤਰਾ",
+    "parksCount": "{{count}} ਪਾਰਕ",
+    "liveSync": "BCWS ਲਾਈਵ ਸਿੰਕ"
+  },
+  "filters": {
+    "title": "ਫਿਲਟਰ",
+    "reset": "ਸਭ ਰੀਸੈਟ ਕਰੋ",
+    "bbqType": "BBQ ਕਿਸਮ",
+    "charcoal": "🔥 ਕੋਲਾ ਮਨਜ਼ੂਰ ਹੈ",
+    "gasOnly": "⛽ ਸਿਰਫ਼ ਗੈਸ",
+    "facilities": "ਸਹੂਲਤਾਂ (ਪ੍ਰਮਾਣਿਤ)",
+    "washrooms": "🚻 ਵਾਸ਼ਰੂਮ",
+    "playground": "🛝 ਖੇਡ ਦਾ ਮੈਦਾਨ",
+    "sports": "⚽ ਖੇਡ ਮੈਦਾਨ / ਕੋਰਟ",
+    "dog": "🐕 ਕੁੱਤਿਆਂ ਦਾ ਖੇਤਰ",
+    "wildfireRisk": "ਅੱਗ ਦੇ ਖਤਰੇ ਦਾ ਪੱਧਰ",
+    "lowRisk": "● ਘੱਟ ਖਤਰਾ",
+    "moderate": "● ਦਰਮਿਆਨਾ ਖਤਰਾ",
+    "highRisk": "● ਉੱਚ / ਅਤਿ ਖਤਰਾ"
+  },
+  "list": {
+    "title": "ਨੇੜਲੇ ਪਾਰਕ",
+    "sortedBy": "ਦੂਰੀ ਅਨੁਸਾਰ • {{count}} ਨਤੀਜੇ",
+    "top": "ਉੱਪਰ ↑",
+    "noParks": "ਕੋਈ ਪਾਰਕ ਨਹੀਂ ਮਿਲਿਆ।"
+  },
+  "popup": {
+    "charcoalGas": "ਕੋਲਾ + ਗੈਸ",
+    "gasOnly": "ਸਿਰਫ਼ ਗੈਸ",
+    "noBbq": "BBQ ਦੀ ਮਨਾਹੀ ਹੈ",
+    "risk": "ਖ਼ਤਰਾ",
+    "getDirections": "🗺️ ਦਿਸ਼ਾਵਾਂ ਪ੍ਰਾਪਤ ਕਰੋ"
+  }
+}

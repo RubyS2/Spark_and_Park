@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "searchPlaceholder": "Search parks or neighborhoods...",
+    "addPark": "+ Add Park",
+    "add": "+ Add"
+  },
+  "hero": {
+    "title": "Find the perfect spot for BBQ",
+    "subtitle": "Real-time wildfire risk • Accurate rules • Local reviews",
+    "wildfireRisk": "Wildfire Risk",
+    "parksCount": "{{count}} parks",
+    "liveSync": "BCWS Live Sync"
+  },
+  "filters": {
+    "title": "Filters",
+    "reset": "Reset All",
+    "bbqType": "BBQ Type",
+    "charcoal": "🔥 Charcoal allowed",
+    "gasOnly": "⛽ Gas only",
+    "facilities": "Facilities (Verified)",
+    "washrooms": "🚻 Washrooms",
+    "playground": "🛝 Playground",
+    "sports": "⚽ Sports Fields / Courts",
+    "dog": "🐕 Dog Off-Leash Area",
+    "wildfireRisk": "Wildfire Risk Level",
+    "lowRisk": "● Low Risk",
+    "moderate": "● Moderate",
+    "highRisk": "● High / Extreme"
+  },
+  "list": {
+    "title": "Nearby Parks",
+    "sortedBy": "Sorted by distance • {{count}} results",
+    "top": "TOP ↑",
+    "noParks": "No parks match your filters.\nTry broadening your search."
+  },
+  "popup": {
+    "charcoalGas": "Charcoal + Gas",
+    "gasOnly": "Gas only",
+    "noBbq": "No BBQ",
+    "risk": "Risk",
+    "getDirections": "🗺️ Get Directions"
+  }
+}

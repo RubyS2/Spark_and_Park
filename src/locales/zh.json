@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "searchPlaceholder": "搜尋公園或社區...",
+    "addPark": "+ 新增公園",
+    "add": "+ 新增"
+  },
+  "hero": {
+    "title": "尋找溫哥華最佳烤肉地點",
+    "subtitle": "即時山火風險 • 準確法規 • 當地評價",
+    "wildfireRisk": "山火風險",
+    "parksCount": "{{count}} 個公園",
+    "liveSync": "BCWS 即時同步"
+  },
+  "filters": {
+    "title": "篩選條件",
+    "reset": "重設全部",
+    "bbqType": "燒烤類型",
+    "charcoal": "🔥 允許木炭",
+    "gasOnly": "⛽ 僅限瓦斯",
+    "facilities": "設施 (官方認證)",
+    "washrooms": "🚻 公共洗手間",
+    "playground": "🛝 兒童遊樂場",
+    "sports": "⚽ 運動場 / 球場",
+    "dog": "🐕 無繩放狗區",
+    "wildfireRisk": "山火風險等級",
+    "lowRisk": "● 低風險",
+    "moderate": "● 中度風險",
+    "highRisk": "● 高度 / 極端風險"
+  },
+  "list": {
+    "title": "附近公園",
+    "sortedBy": "按距離排序 • {{count}} 個結果",
+    "top": "頂部 ↑",
+    "noParks": "找不到符合條件的公園。\n請嘗試擴大搜尋範圍。"
+  },
+  "popup": {
+    "charcoalGas": "木炭 + 瓦斯",
+    "gasOnly": "僅限瓦斯",
+    "noBbq": "禁止燒烤",
+    "risk": "風險等級",
+    "getDirections": "🗺️ 規劃路線"
+  }
+}
