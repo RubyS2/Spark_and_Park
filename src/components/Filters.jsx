@@ -1,4 +1,3 @@
-// src/components/Filters.jsx
 import React from 'react'
 
 function Filters({ filters, onChange, onReset }) {
@@ -18,10 +17,10 @@ function Filters({ filters, onChange, onReset }) {
         </button>
       </div>
 
-      {/* BBQ Filter */}
+      {/* BBQ Filter: Charcoal allowed / Gas only */}
       <div className="mb-5">
         <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2.5">
-          BBQ Permissions
+          BBQ Type
         </div>
         <div className="space-y-2">
           <label className="flex items-center gap-x-2.5 cursor-pointer select-none">
@@ -31,7 +30,7 @@ function Filters({ filters, onChange, onReset }) {
               onChange={() => toggle('charcoal')}
               className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
             />
-            <span>🔥 Charcoal + Gas</span>
+            <span>🔥 Charcoal allowed</span>
           </label>
           <label className="flex items-center gap-x-2.5 cursor-pointer select-none">
             <input 
@@ -40,7 +39,7 @@ function Filters({ filters, onChange, onReset }) {
               onChange={() => toggle('gasOnly')}
               className="accent-emerald-500 w-4 h-4 rounded cursor-pointer"
             />
-            <span>⛽ Gas Only</span>
+            <span>⛽ Gas only</span>
           </label>
         </div>
       </div>
