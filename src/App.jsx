@@ -33,13 +33,14 @@ function App() {
   const [userLocation, setUserLocation] = useState({ lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' })
   const [currentFireRisk, setCurrentFireRisk] = useState({ riskLevel: 'moderate', rawDesc: 'Loading...', updatedAt: '' })
   
+  // 밴쿠버 오픈데이터 실존 필드 기반 필터 상태
   const [filters, setFilters] = useState({
     charcoal: true,
     gasOnly: true,
     restroom: false,
-    parking: false,
-    picnic: false,
-    water: false,
+    playground: false,
+    sports: false,
+    dog: false,
     riskLow: true,
     riskModerate: true,
     riskHigh: true,
@@ -89,7 +90,7 @@ function App() {
     init()
   }, [])
 
-  // 2. 검색 및 필터링 로직
+  // 2. 검색 및 필터링 로직 (실존 데이터 매핑)
   useEffect(() => {
     let result = parks
 
@@ -108,9 +109,9 @@ function App() {
     })
 
     if (filters.restroom) result = result.filter(p => p.facilities?.includes('restroom'))
-    if (filters.parking) result = result.filter(p => p.facilities?.includes('parking'))
-    if (filters.picnic) result = result.filter(p => p.facilities?.includes('picnic'))
-    if (filters.water) result = result.filter(p => p.facilities?.includes('water'))
+    if (filters.playground) result = result.filter(p => p.facilities?.includes('playground'))
+    if (filters.sports) result = result.filter(p => p.facilities?.includes('sports'))
+    if (filters.dog) result = result.filter(p => p.facilities?.includes('dog'))
 
     result = result.filter(p => {
       const risk = (p.risk || '').toLowerCase()
@@ -150,9 +151,9 @@ function App() {
       charcoal: true,
       gasOnly: true,
       restroom: false,
-      parking: false,
-      picnic: false,
-      water: false,
+      playground: false,
+      sports: false,
+      dog: false,
       riskLow: true,
       riskModerate: true,
       riskHigh: true
@@ -169,7 +170,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-200">
-      {/* Navbar: 모바일에서 상하 2줄 분리 배치 */}
+      {/* Navbar: 모바일 친화적 상하 2줄 분리 배치 */}
       <nav className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 md:h-16 flex flex-col md:flex-row md:items-center justify-between gap-3">
           
@@ -184,7 +185,7 @@ function App() {
               </div>
             </div>
 
-            {/* 모바일 화면용 버튼 묶음 (우측 상단 배치) */}
+            {/* 모바일 화면용 버튼 묶음 */}
             <div className="flex items-center gap-x-2 md:hidden">
               <button 
                 onClick={() => {
@@ -196,7 +197,7 @@ function App() {
                       lng: -123.12 + (Math.random() - 0.5) * 0.12,
                       bbq: Math.random() > 0.5 ? "charcoal" : "gas-only",
                       risk: currentFireRisk.riskLevel,
-                      facilities: ["restroom", "parking", "picnic"].slice(0, 2 + Math.floor(Math.random() * 2)),
+                      facilities: ["restroom", "playground", "sports"].slice(0, 2 + Math.floor(Math.random() * 2)),
                       description: "New park added by the community."
                     })
                   }
@@ -215,7 +216,7 @@ function App() {
             </div>
           </div>
 
-          {/* 검색창: 모바일에서는 전체 폭 확장 */}
+          {/* 검색창 */}
           <div className="w-full md:flex-1 md:max-w-md md:mx-6">
             <div className="relative">
               <input
@@ -229,7 +230,7 @@ function App() {
             </div>
           </div>
 
-          {/* 데스크톱용 버튼 목록 */}
+          {/* 데스크톱용 버튼 */}
           <div className="hidden md:flex items-center gap-x-4">
             <button 
               onClick={() => {
@@ -241,7 +242,7 @@ function App() {
                     lng: -123.12 + (Math.random() - 0.5) * 0.12,
                     bbq: Math.random() > 0.5 ? "charcoal" : "gas-only",
                     risk: currentFireRisk.riskLevel,
-                    facilities: ["restroom", "parking", "picnic"].slice(0, 2 + Math.floor(Math.random() * 2)),
+                    facilities: ["restroom", "playground", "sports"].slice(0, 2 + Math.floor(Math.random() * 2)),
                     description: "New park added by the community."
                   })
                 }
@@ -300,7 +301,7 @@ function App() {
           </div>
         </div>
 
-        {/* 3단 그리드 레이아웃 (모바일: 1열 세로 스택, PC: 3열 분할) */}
+        {/* 3단 그리드 레이아웃 */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
           
           {/* 1. Filters */}
@@ -312,7 +313,7 @@ function App() {
             />
           </div>
 
-          {/* 2. Map (모바일 360px, 데스크톱 620px) */}
+          {/* 2. Map */}
           <div className="lg:col-span-6">
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl sm:rounded-3xl overflow-hidden h-[360px] sm:h-[480px] lg:h-[620px]">
               <MapContainer 
