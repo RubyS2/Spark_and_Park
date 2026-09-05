@@ -5,8 +5,8 @@ const INFERNIS_API_KEY = import.meta.env.VITE_INFERNIS_API_KEY;
 const BASE_URL = "https://api.infernis.ca/v1";
 const VANCOUVER_PARKS_API_BASE = "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/parks/records";
 
-// 새 캐시 키 (기존 캐시 강제 무효화)
-const PARKS_CACHE_KEY = "SPARK_PARKS_ACCURATE_FACILITIES_V3";
+// 캐시 키 버전을 V4로 올려 이전 캐시를 완전히 무력화
+const PARKS_CACHE_KEY = "SPARK_PARKS_ACCURATE_FACILITIES_V4";
 const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
 export async function getVancouverFireRisk(lat = 49.2827, lon = -123.1207) {
@@ -71,35 +71,50 @@ export async function fetchVancouverParks(currentRisk = 'moderate', userLocation
     }
 
     const parsedParks = allParksData.map((item, index) => {
-      const lat = Number(item.geo_point_2d?.lat || item.googlemapdest?.lat || (49.25 + (index % 10) * 0.01));
-      const lng = Number(item.geo_point_2d?.lon || item.googlemapdest?.lon || (-123.12 + (index % 10) * 0.01));
+      const lat = Number(item.geo_point_2d?.lat || (item.googlemapdest ? parseFloat(String(item.googlemapdest).split(',')[0]) : (49.25 + (index % 10) * 0.01)));
+      const lng = Number(item.geo_point_2d?.lon || (item.googlemapdest ? parseFloat(String(item.googlemapdest).split(',')[1]) : (-123.12 + (index % 10) * 0.01)));
 
-      const facilitiesText = `${item.facilities || ''} ${item.special_features || ''}`.toLowerCase();
+      // 밴쿠버 오픈데이터 텍스트 필드 전부 통합 (소문자화)
+      const facilitiesText = `${item.facilities || ''} ${item.special_features || ''} ${item.name || ''}`.toLowerCase();
       const actualFacilities = [];
 
-      // 1. 화장실
-      if (item.washrooms === 'Y' || item.washroom === 'Y' || facilitiesText.includes('washroom')) {
+      // 1. 화장실 (washrooms 컬럼이 'Y' 이거나 텍스트 포함)
+      if (item.washrooms === 'Y' || item.washroom === 'Y' || facilitiesText.includes('washroom') || facilitiesText.includes('toilet')) {
         actualFacilities.push('restroom');
       }
 
-      // 2. 어린이 놀이터 (Playgrounds)
-      if (facilitiesText.includes('playground') || facilitiesText.includes('play area')) {
+      // 2. 어린이 놀이터 (play, playground, swings 등)
+      if (
+        facilitiesText.includes('play') || 
+        facilitiesText.includes('playground') || 
+        facilitiesText.includes('swing') ||
+        facilitiesText.includes('wading')
+      ) {
         actualFacilities.push('playground');
       }
 
-      // 3. 체육 시설 (Soccer, Tennis, Basketball, Field House 등)
+      // 3. 체육 시설 (야구 다이아몬드, 테니스, 축구, 필드, 코트, 트랙, 럭비 등)
       if (
-        facilitiesText.includes('soccer') || 
-        facilitiesText.includes('tennis') || 
-        facilitiesText.includes('basketball') || 
+        facilitiesText.includes('court') || 
         facilitiesText.includes('field') || 
-        facilitiesText.includes('court')
+        facilitiesText.includes('diamond') || 
+        facilitiesText.includes('tennis') || 
+        facilitiesText.includes('soccer') || 
+        facilitiesText.includes('basketball') || 
+        facilitiesText.includes('baseball') ||
+        facilitiesText.includes('track') ||
+        facilitiesText.includes('sport')
       ) {
         actualFacilities.push('sports');
       }
 
-      // 4. 반려견 구역 (Dogs Off-Leash)
-      if (facilitiesText.includes('dog') || facilitiesText.includes('off-leash') || facilitiesText.includes('off leash')) {
+      // 4. 반려견 오프리쉬 구역 (dog, off-leash, canine 등)
+      if (
+        facilitiesText.includes('dog') || 
+        facilitiesText.includes('off-leash') || 
+        facilitiesText.includes('off leash') ||
+        facilitiesText.includes('canine')
+      ) {
         actualFacilities.push('dog');
       }
 
