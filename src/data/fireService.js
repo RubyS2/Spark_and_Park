@@ -5,8 +5,8 @@ const INFERNIS_API_KEY = import.meta.env.VITE_INFERNIS_API_KEY;
 const BASE_URL = "https://api.infernis.ca/v1";
 const VANCOUVER_PARKS_API_BASE = "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/parks/records";
 
-// 캐시 키 V5로 갱신 (비정상 좌표 캐시 강제 무력화)
-const PARKS_CACHE_KEY = "SPARK_PARKS_ACCURATE_FACILITIES_V5";
+// 캐시 키 갱신 (V6)
+const PARKS_CACHE_KEY = "SPARK_PARKS_RESTORED_COORDS_V6";
 const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
 export async function getVancouverFireRisk(lat = 49.2827, lon = -123.1207) {
@@ -40,14 +40,12 @@ export async function fetchVancouverParks(currentRisk = 'moderate', userLocation
       try {
         const { timestamp, parks } = JSON.parse(cachedData);
         if (Date.now() - timestamp < CACHE_EXPIRY_MS && Array.isArray(parks) && parks.length > 0) {
-          return parks
-            .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng))
-            .map(p => ({
-              ...p,
-              risk: currentRisk,
-              bbq: currentRisk === 'high' && p.bbq === 'charcoal' ? 'gas-only' : p.bbq,
-              distance: `${calculateDistanceKm(userLocation.lat, userLocation.lng, p.lat, p.lng)} km`
-            }));
+          return parks.map(p => ({
+            ...p,
+            risk: currentRisk,
+            bbq: currentRisk === 'high' && p.bbq === 'charcoal' ? 'gas-only' : p.bbq,
+            distance: `${calculateDistanceKm(userLocation.lat, userLocation.lng, p.lat, p.lng)} km`
+          }));
         }
       } catch (e) {
         console.warn("Cache parse failed, re-fetching...");
@@ -74,28 +72,26 @@ export async function fetchVancouverParks(currentRisk = 'moderate', userLocation
 
     const parsedParks = allParksData
       .map((item, index) => {
-        // 안전한 위도/경도 파싱
+        // 원래 정상 작동하던 밴쿠버 오픈데이터 실좌표 파싱
         let lat = null;
         let lng = null;
 
-        if (item.geo_point_2d && typeof item.geo_point_2d.lat === 'number') {
+        if (item.geo_point_2d && typeof item.geo_point_2d.lat === 'number' && typeof item.geo_point_2d.lon === 'number') {
           lat = item.geo_point_2d.lat;
           lng = item.geo_point_2d.lon;
-        } else if (item.googlemapdest && typeof item.googlemapdest === 'string') {
-          const parts = item.googlemapdest.split(',');
-          if (parts.length >= 2) {
-            lat = parseFloat(parts[0]);
-            lng = parseFloat(parts[1]);
-          }
+        } else if (item.googlemapdest && typeof item.googlemapdest === 'string' && item.googlemapdest.includes(',')) {
+          const coords = item.googlemapdest.split(',');
+          lat = parseFloat(coords[0]);
+          lng = parseFloat(coords[1]);
         }
 
-        // 그래도 좌표가 없으면 기본 밴쿠버 범위 내 분산 배치 (Leaflet crash 방지)
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-          lat = 49.25 + (index % 10) * 0.008;
-          lng = -123.12 + (index % 10) * 0.008;
+        // 실제 밴쿠버 경위도 범위 검증 (Lat: 49.15 ~ 49.35, Lng: -123.28 ~ -123.00)
+        // 밴쿠버 범위를 벗어난 이상치나 null은 배제
+        if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat < 49.0 || lat > 49.5 || lng < -123.4 || lng > -122.8) {
+          return null;
         }
 
-        // 편의시설 다중 키워드 매핑
+        // 시설 필터링 (원문 텍스트 전체 검색)
         const facilitiesText = `${item.facilities || ''} ${item.special_features || ''} ${item.name || ''}`.toLowerCase();
         const actualFacilities = [];
 
@@ -105,12 +101,7 @@ export async function fetchVancouverParks(currentRisk = 'moderate', userLocation
         }
 
         // 2. 놀이터
-        if (
-          facilitiesText.includes('play') || 
-          facilitiesText.includes('playground') || 
-          facilitiesText.includes('swing') ||
-          facilitiesText.includes('wading')
-        ) {
+        if (facilitiesText.includes('play') || facilitiesText.includes('swing') || facilitiesText.includes('wading')) {
           actualFacilities.push('playground');
         }
 
@@ -129,13 +120,8 @@ export async function fetchVancouverParks(currentRisk = 'moderate', userLocation
           actualFacilities.push('sports');
         }
 
-        // 4. 반려견 구역
-        if (
-          facilitiesText.includes('dog') || 
-          facilitiesText.includes('off-leash') || 
-          facilitiesText.includes('off leash') ||
-          facilitiesText.includes('canine')
-        ) {
+        // 4. 반려견 오프리쉬 구역
+        if (facilitiesText.includes('dog') || facilitiesText.includes('leash') || facilitiesText.includes('canine')) {
           actualFacilities.push('dog');
         }
 
@@ -161,8 +147,7 @@ export async function fetchVancouverParks(currentRisk = 'moderate', userLocation
           reviews: []
         };
       })
-      // 유효하지 않은 좌표는 최종적으로 목록에서 제외
-      .filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+      .filter(p => p !== null);
 
     localStorage.setItem(PARKS_CACHE_KEY, JSON.stringify({
       timestamp: Date.now(),
