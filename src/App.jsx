@@ -33,15 +33,13 @@ function App() {
   const [userLocation, setUserLocation] = useState({ lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' })
   const [currentFireRisk, setCurrentFireRisk] = useState({ riskLevel: 'moderate', rawDesc: 'Loading...', updatedAt: '' })
 
-  // 1. 다크/화이트 모드 상태 (시스템 기본값 감지 + localStorage 기억)
+  // 다크/화이트 모드 상태 (시스템 기본값 감지 + localStorage 기억)
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme')
     if (savedTheme) return savedTheme === 'dark'
-    // 저장된 설정이 없으면 사용자 기기/브라우저 시스템 설정 감지
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
   })
 
-  // HTML 태그에 'dark' 클래스 적용 및 localStorage 동기화
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark')
@@ -197,7 +195,7 @@ function App() {
           
           <div className="flex items-center justify-between w-full md:w-auto">
             <div className="flex items-center gap-x-2.5">
-              <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-sm">
+              <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-sm text-white">
                 🔥
               </div>
               <div>
@@ -208,7 +206,6 @@ function App() {
 
             {/* 모바일 화면용 버튼 묶음 (다크모드 토글 + 언어 + 제보) */}
             <div className="flex items-center gap-x-2 md:hidden">
-              {/* 테마 토글 버튼 (모바일) */}
               <button
                 onClick={toggleDarkMode}
                 aria-label="Toggle Theme"
@@ -268,7 +265,6 @@ function App() {
 
           {/* 데스크톱 상단 우측 버튼 목록 */}
           <div className="hidden md:flex items-center gap-x-3">
-            {/* 테마 토글 버튼 (데스크톱) */}
             <button
               onClick={toggleDarkMode}
               title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
@@ -277,7 +273,6 @@ function App() {
               <span>{isDarkMode ? '☀️ Light' : '🌙 Dark'}</span>
             </button>
 
-            {/* 언어 선택 셀렉트 */}
             <select
               value={i18n.language?.startsWith('ko') ? 'ko' : i18n.language?.startsWith('fr') ? 'fr' : i18n.language?.startsWith('zh') ? 'zh' : i18n.language?.startsWith('pa') ? 'pa' : 'en'}
               onChange={(e) => changeLanguage(e.target.value)}
@@ -387,7 +382,7 @@ function App() {
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
 
-                {userLocation.isRealGps && (
+                {userLocation.isRealGps && Number.isFinite(userLocation.lat) && Number.isFinite(userLocation.lng) && (
                   <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
                     <Popup>
                       <div className="font-bold text-blue-600">📍 You are here</div>
@@ -395,56 +390,59 @@ function App() {
                   </Marker>
                 )}
                 
-                {filteredParks.map(park => {
-                  let iconColor = '#ef4444'
-                  let emoji = '🚫'
-                  if (park.bbq === 'charcoal') { iconColor = '#22c55e'; emoji = '🔥' }
-                  else if (park.bbq === 'gas-only') { iconColor = '#eab308'; emoji = '⛽' }
+                {/* 🛡️ 좌표 유효성 검증 필터 추가 (Leaflet Crash 완벽 방어) */}
+                {filteredParks
+                  .filter(park => park && Number.isFinite(park.lat) && Number.isFinite(park.lng))
+                  .map(park => {
+                    let iconColor = '#ef4444'
+                    let emoji = '🚫'
+                    if (park.bbq === 'charcoal') { iconColor = '#22c55e'; emoji = '🔥' }
+                    else if (park.bbq === 'gas-only') { iconColor = '#eab308'; emoji = '⛽' }
 
-                  const customIcon = L.divIcon({
-                    className: 'custom-marker',
-                    html: `<div style="color: ${iconColor}; font-size: 16px; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">${emoji}</div>`,
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 16]
-                  })
+                    const customIcon = L.divIcon({
+                      className: 'custom-marker',
+                      html: `<div style="color: ${iconColor}; font-size: 16px; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">${emoji}</div>`,
+                      iconSize: [32, 32],
+                      iconAnchor: [16, 16]
+                    })
 
-                  return (
-                    <Marker 
-                      key={park.id} 
-                      position={[park.lat, park.lng]} 
-                      icon={customIcon}
-                      eventHandlers={{
-                        click: () => handleParkClick(park)
-                      }}
-                    >
-                      <Popup>
-                        <div className="font-semibold text-zinc-900">{park.name}</div>
-                        <div className="text-xs text-gray-500 my-1">
-                          {park.distance} • {park.bbq === 'charcoal' ? t('popup.charcoalGas') : park.bbq === 'gas-only' ? t('popup.gasOnly') : t('popup.noBbq')}
-                        </div>
-                        <div className="text-[10px] mb-2 font-bold text-zinc-600">
-                          {t('popup.risk')}: <span className="uppercase">{park.risk}</span>
-                        </div>
-                        <a
-                          href={getGoogleMapsDirectionsUrl(park.lat, park.lng, park.name)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-block w-full text-center px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium"
-                        >
-                          {t('popup.getDirections')}
-                        </a>
-                      </Popup>
-                    </Marker>
-                  )
-                })}
+                    return (
+                      <Marker 
+                        key={park.id} 
+                        position={[park.lat, park.lng]} 
+                        icon={customIcon}
+                        eventHandlers={{
+                          click: () => handleParkClick(park)
+                        }}
+                      >
+                        <Popup>
+                          <div className="font-semibold text-zinc-900">{park.name}</div>
+                          <div className="text-xs text-gray-500 my-1">
+                            {park.distance} • {park.bbq === 'charcoal' ? t('popup.charcoalGas') : park.bbq === 'gas-only' ? t('popup.gasOnly') : t('popup.noBbq')}
+                          </div>
+                          <div className="text-[10px] mb-2 font-bold text-zinc-600">
+                            {t('popup.risk')}: <span className="uppercase">{park.risk}</span>
+                          </div>
+                          <a
+                            href={getGoogleMapsDirectionsUrl(park.lat, park.lng, park.name)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-block w-full text-center px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium"
+                          >
+                            {t('popup.getDirections')}
+                          </a>
+                        </Popup>
+                      </Marker>
+                    )
+                  })}
               </MapContainer>
             </div>
             
             <div className="flex flex-wrap justify-between items-center mt-2 px-1 text-[11px] sm:text-xs text-zinc-500 gap-y-1">
               <div className="flex gap-x-3 sm:gap-x-4">
-                <div className="flex items-center gap-x-1"><span className="text-emerald-500">🔥</span> Charcoal</div>
-                <div className="flex items-center gap-x-1"><span className="text-yellow-500">⛽</span> Gas only</div>
-                <div className="flex items-center gap-x-1"><span className="text-red-500">🚫</span> Prohibited</div>
+                <div className="flex items-center gap-x-1"><span className="text-emerald-500">🔥</span> {t('card.charcoal')}</div>
+                <div className="flex items-center gap-x-1"><span className="text-yellow-500">⛽</span> {t('card.gasOnly')}</div>
+                <div className="flex items-center gap-x-1"><span className="text-red-500">🚫</span> {t('card.noBbq')}</div>
               </div>
               <div>Vancouver Open Data + BCWS</div>
             </div>
