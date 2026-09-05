@@ -5,8 +5,8 @@ const INFERNIS_API_KEY = import.meta.env.VITE_INFERNIS_API_KEY;
 const BASE_URL = "https://api.infernis.ca/v1";
 const VANCOUVER_PARKS_API_BASE = "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/parks/records";
 
-// 캐시 키 V8로 갱신 (기존 잘못된 캐시 즉시 자동 무효화)
-const PARKS_CACHE_KEY = "SPARK_PARKS_ACCURATE_COORDS_V8";
+// 캐시 키 V9로 갱신 (이름 깨짐 복구 캐시 반영)
+const PARKS_CACHE_KEY = "SPARK_PARKS_ACCURATE_COORDS_V9";
 const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
 export async function getVancouverFireRisk(lat = 49.2827, lon = -123.1207) {
@@ -31,6 +31,27 @@ export async function getVancouverFireRisk(lat = 49.2827, lon = -123.1207) {
   } catch (error) {
     return { riskLevel: "moderate", rawDesc: "MODERATE", updatedAt: "Offline" };
   }
+}
+
+// 🛡️ 깨진 원주민어 공원 이름을 익숙한 영어 이름으로 복구해 주는 헬퍼 함수
+function cleanParkName(name) {
+  if (!name) return "Vancouver Park";
+  
+  // Trillium Park (sθәqəlxenəm ts'exwts'áxwi7) - 인코딩 깨짐 처리
+  if (name.includes("s??q?lxen?m") || name.includes("sθәqəlxenəm")) {
+    return "Trillium Park";
+  }
+  // Vancouver Art Gallery North Plaza (šxʷƛ̓ənəq Xwtl'e7énḵ Square)
+  if (name.includes("šxʷƛ̓ənəq") || name.includes("?x?????n?q") || name.includes("Xwtl'e7énḵ")) {
+    return "Vancouver Art Gallery Plaza";
+  }
+  // 그 외 무작위 물음표가 3개 이상 연속으로 깨져서 오는 데이터 클리닝
+  if (name.includes("???")) {
+    const cleaned = name.replace(/\?/g, "").trim();
+    return cleaned.length > 2 ? cleaned : "Vancouver Public Park";
+  }
+  
+  return name;
 }
 
 export async function fetchVancouverParks(currentRisk = 'moderate', userLocation = { lat: 49.2827, lng: -123.1207 }) {
@@ -70,7 +91,6 @@ export async function fetchVancouverParks(currentRisk = 'moderate', userLocation
 
     const parsedParks = allParksData
       .map((item, index) => {
-        // 1. 밴쿠버 오픈데이터 정밀 좌표 추출
         let lat = null;
         let lng = null;
 
@@ -82,22 +102,18 @@ export async function fetchVancouverParks(currentRisk = 'moderate', userLocation
           lng = item.geo_point_2d.lon;
         }
 
-        // 좌표가 없는 극소수 레코드는 제외
         if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
           return null;
         }
 
-        // 2. 밴쿠버 공식 편의시설 매핑
         const actualFacilities = [];
         const parkNameLower = (item.name || '').toLowerCase();
         const pId = Number(item.parkid) || (index + 1);
 
-        // 화장실 (시청 공인 washrooms === 'Y')
         if (item.washrooms === 'Y' || item.washroom === 'Y') {
           actualFacilities.push('restroom');
         }
 
-        // 주요 랜드마크 공원 (주요 편의시설 완비)
         const isMajorPark = 
           parkNameLower.includes('stanley') || 
           parkNameLower.includes('kitsilano') || 
@@ -109,33 +125,19 @@ export async function fetchVancouverParks(currentRisk = 'moderate', userLocation
           parkNameLower.includes('central') || 
           parkNameLower.includes('memorial');
 
-        // 밴쿠버 시청 오픈데이터 facilities === 'Y'인 155개 공원 대상 공식 비율 매핑
         const hasFacilities = item.facilities === 'Y' || isMajorPark;
 
         if (hasFacilities) {
-          // 어린이 놀이터: 155개 중 114개 공원 (약 74%)
-          if (isMajorPark || pId % 4 !== 0) {
-            actualFacilities.push('playground');
-          }
-
-          // 스포츠 코트/구장: 155개 중 100개 공원 (약 65%)
-          if (isMajorPark || pId % 3 !== 0) {
-            actualFacilities.push('sports');
-          }
-
-          // 반려견 오프리쉬 구역: 155개 중 37개 공원 (약 24%)
-          if (isMajorPark || pId % 5 === 0 || pId % 7 === 0) {
-            actualFacilities.push('dog');
-          }
+          if (isMajorPark || pId % 4 !== 0) actualFacilities.push('playground');
+          if (isMajorPark || pId % 3 !== 0) actualFacilities.push('sports');
+          if (isMajorPark || pId % 5 === 0 || pId % 7 === 0) actualFacilities.push('dog');
         }
 
-        // 3. BBQ 허용 여부
         let bbqType = index % 3 === 0 ? 'charcoal' : 'gas-only';
         if (currentRisk === 'high') {
           bbqType = 'gas-only';
         }
 
-        // 4. 산불 위험도 (산림 밀집 공원은 고위험, 일반 도심공원은 저/중위험)
         let parkRisk = 'moderate';
         if (parkNameLower.includes('stanley') || parkNameLower.includes('pacific spirit')) {
           parkRisk = 'high';
@@ -143,9 +145,12 @@ export async function fetchVancouverParks(currentRisk = 'moderate', userLocation
           parkRisk = 'low';
         }
 
+        // 🌟 여기서 공원 이름 깨짐 현상을 깔끔하게 처리합니다
+        const finalParkName = cleanParkName(item.name);
+
         return {
           id: item.parkid || `vanc-park-${index}`,
-          name: item.name || "Vancouver Park",
+          name: finalParkName,
           lat,
           lng,
           bbq: bbqType,
