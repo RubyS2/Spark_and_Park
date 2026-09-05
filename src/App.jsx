@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
@@ -33,7 +32,28 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('')
   const [userLocation, setUserLocation] = useState({ lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' })
   const [currentFireRisk, setCurrentFireRisk] = useState({ riskLevel: 'moderate', rawDesc: 'Loading...', updatedAt: '' })
-  
+
+  // 1. 다크/화이트 모드 상태 (시스템 기본값 감지 + localStorage 기억)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme) return savedTheme === 'dark'
+    // 저장된 설정이 없으면 사용자 기기/브라우저 시스템 설정 감지
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+  })
+
+  // HTML 태그에 'dark' 클래스 적용 및 localStorage 동기화
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }, [isDarkMode])
+
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev)
+
   const [filters, setFilters] = useState({
     charcoal: true,
     gasOnly: true,
@@ -170,29 +190,38 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-200">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-200 transition-colors duration-200">
       {/* Navbar */}
-      <nav className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50">
+      <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-50 transition-colors duration-200">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 md:h-16 flex flex-col md:flex-row md:items-center justify-between gap-3">
           
           <div className="flex items-center justify-between w-full md:w-auto">
             <div className="flex items-center gap-x-2.5">
-              <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-xl">
+              <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-sm">
                 🔥
               </div>
               <div>
-                <span className="font-bold text-2xl tracking-tighter">SPARK</span>
-                <span className="font-bold text-2xl tracking-tighter text-emerald-400">&amp; PARK</span>
+                <span className="font-bold text-2xl tracking-tighter text-zinc-900 dark:text-white">SPARK</span>
+                <span className="font-bold text-2xl tracking-tighter text-emerald-600 dark:text-emerald-400">&amp; PARK</span>
               </div>
             </div>
 
-            {/* 모바일: 언어 변환 + 제보 버튼 */}
+            {/* 모바일 화면용 버튼 묶음 (다크모드 토글 + 언어 + 제보) */}
             <div className="flex items-center gap-x-2 md:hidden">
+              {/* 테마 토글 버튼 (모바일) */}
+              <button
+                onClick={toggleDarkMode}
+                aria-label="Toggle Theme"
+                className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-sm flex items-center justify-center transition-all"
+              >
+                {isDarkMode ? '☀️' : '🌙'}
+              </button>
+
               <select
-                value={i18n.language}
+                value={i18n.language?.startsWith('ko') ? 'ko' : i18n.language?.startsWith('fr') ? 'fr' : i18n.language?.startsWith('zh') ? 'zh' : i18n.language?.startsWith('pa') ? 'pa' : 'en'}
                 onChange={(e) => changeLanguage(e.target.value)}
                 aria-label="Select Language"
-                className="bg-zinc-800 text-xs border border-zinc-700 text-zinc-200 rounded-xl px-2 py-1 focus:outline-none focus:border-emerald-500"
+                className="bg-zinc-100 dark:bg-zinc-800 text-xs border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xl px-2 py-1.5 focus:outline-none"
               >
                 <option value="en">EN</option>
                 <option value="ko">KO</option>
@@ -216,7 +245,7 @@ function App() {
                     })
                   }
                 }}
-                className="px-3 py-1.5 bg-white text-zinc-900 rounded-2xl text-xs font-semibold"
+                className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold"
               >
                 {t('nav.add')}
               </button>
@@ -231,19 +260,29 @@ function App() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={t('nav.searchPlaceholder')}
-                className="w-full bg-zinc-950 md:bg-zinc-900 border border-zinc-700 focus:border-emerald-600 pl-10 pr-4 py-2 rounded-2xl text-sm focus:outline-none text-white placeholder-zinc-500"
+                className="w-full bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 focus:border-emerald-600 pl-10 pr-4 py-2 rounded-2xl text-sm focus:outline-none text-zinc-900 dark:text-white placeholder-zinc-500"
               />
-              <span className="absolute left-3.5 top-2.5 text-zinc-500 text-sm">🔍</span>
+              <span className="absolute left-3.5 top-2.5 text-zinc-400 text-sm">🔍</span>
             </div>
           </div>
 
-          {/* 데스크톱: 언어 선택 드롭다운 + Add Park + Profile */}
+          {/* 데스크톱 상단 우측 버튼 목록 */}
           <div className="hidden md:flex items-center gap-x-3">
+            {/* 테마 토글 버튼 (데스크톱) */}
+            <button
+              onClick={toggleDarkMode}
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              className="px-3 py-1.5 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 text-xs font-semibold flex items-center gap-1.5 transition-all text-zinc-700 dark:text-zinc-200"
+            >
+              <span>{isDarkMode ? '☀️ Light' : '🌙 Dark'}</span>
+            </button>
+
+            {/* 언어 선택 셀렉트 */}
             <select
-              value={i18n.language}
+              value={i18n.language?.startsWith('ko') ? 'ko' : i18n.language?.startsWith('fr') ? 'fr' : i18n.language?.startsWith('zh') ? 'zh' : i18n.language?.startsWith('pa') ? 'pa' : 'en'}
               onChange={(e) => changeLanguage(e.target.value)}
               aria-label="Select Language"
-              className="bg-zinc-800 text-xs border border-zinc-700 text-zinc-200 rounded-2xl px-3 py-2 focus:outline-none focus:border-emerald-500 cursor-pointer"
+              className="bg-zinc-100 dark:bg-zinc-800 text-xs border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-2xl px-3 py-2 focus:outline-none focus:border-emerald-500 cursor-pointer"
             >
               <option value="en">🌐 English (EN)</option>
               <option value="ko">🌐 한국어 (KO)</option>
@@ -267,7 +306,7 @@ function App() {
                   })
                 }
               }}
-              className="px-4 py-2 bg-white text-zinc-900 hover:bg-zinc-100 rounded-3xl text-sm font-semibold flex items-center gap-x-2 active:scale-95 transition-all"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-3xl text-sm font-semibold flex items-center gap-x-2 active:scale-95 transition-all shadow-sm"
             >
               {t('nav.addPark')}
             </button>
@@ -275,12 +314,12 @@ function App() {
             <button
               onClick={toggleVancouverDowntown}
               title="Click to reset location to Vancouver Downtown"
-              className="flex items-center gap-x-2 bg-zinc-900 border border-zinc-800 hover:border-emerald-600 px-3 py-1.5 rounded-3xl text-sm cursor-pointer transition-all"
+              className="flex items-center gap-x-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-emerald-600 px-3 py-1.5 rounded-3xl text-sm cursor-pointer transition-all"
             >
-              <div className="w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center text-xs font-bold">JD</div>
+              <div className="w-7 h-7 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">JD</div>
               <div className="text-left">
-                <div className="font-medium text-xs">Jisol Kim</div>
-                <div className="text-[10px] text-emerald-400 -mt-0.5 max-w-[120px] truncate">
+                <div className="font-medium text-xs text-zinc-800 dark:text-zinc-200">Jisol Kim</div>
+                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 -mt-0.5 max-w-[120px] truncate">
                   📍 {userLocation.label}
                 </div>
               </div>
@@ -294,27 +333,31 @@ function App() {
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">{t('hero.title')}</h1>
-            <p className="text-sm sm:text-base lg:text-lg text-zinc-400 mt-1 sm:mt-2">{t('hero.subtitle')}</p>
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-zinc-900 dark:text-white">
+              {t('hero.title')}
+            </h1>
+            <p className="text-sm sm:text-base lg:text-lg text-zinc-600 dark:text-zinc-400 mt-1 sm:mt-2">
+              {t('hero.subtitle')}
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-            <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center gap-x-1.5">
-              <span className="text-zinc-400">{t('hero.wildfireRisk')}:</span>
+            <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl flex items-center gap-x-1.5 shadow-sm">
+              <span className="text-zinc-500 dark:text-zinc-400">{t('hero.wildfireRisk')}:</span>
               <span className={`font-semibold capitalize ${
-                currentFireRisk.riskLevel === 'high' ? 'text-red-400' :
-                currentFireRisk.riskLevel === 'moderate' ? 'text-yellow-400' : 'text-emerald-400'
+                currentFireRisk.riskLevel === 'high' ? 'text-red-500 dark:text-red-400' :
+                currentFireRisk.riskLevel === 'moderate' ? 'text-yellow-600 dark:text-yellow-400' : 'text-emerald-600 dark:text-emerald-400'
               }`}>
                 {currentFireRisk.rawDesc}
               </span>
             </div>
 
-            <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-zinc-900 border border-zinc-800 rounded-2xl flex items-center gap-x-1.5">
+            <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl flex items-center gap-x-1.5 shadow-sm">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span>{t('hero.parksCount', { count: filteredParks.length })}</span>
+              <span className="text-zinc-800 dark:text-zinc-200">{t('hero.parksCount', { count: filteredParks.length })}</span>
             </div>
 
-            <div className="px-3 py-1.5 sm:px-3 sm:py-2 bg-emerald-900/30 text-emerald-300 border border-emerald-800/60 rounded-2xl text-xs">
+            <div className="px-3 py-1.5 sm:px-3 sm:py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl text-xs font-medium">
               {t('hero.liveSync')}
             </div>
           </div>
@@ -332,7 +375,7 @@ function App() {
           </div>
 
           <div className="lg:col-span-6">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl sm:rounded-3xl overflow-hidden h-[360px] sm:h-[480px] lg:h-[620px]">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl overflow-hidden h-[360px] sm:h-[480px] lg:h-[620px] shadow-sm">
               <MapContainer 
                 center={[49.2827, -123.1207]} 
                 zoom={12} 
@@ -400,7 +443,7 @@ function App() {
             <div className="flex flex-wrap justify-between items-center mt-2 px-1 text-[11px] sm:text-xs text-zinc-500 gap-y-1">
               <div className="flex gap-x-3 sm:gap-x-4">
                 <div className="flex items-center gap-x-1"><span className="text-emerald-500">🔥</span> Charcoal</div>
-                <div className="flex items-center gap-x-1"><span className="text-yellow-400">⛽</span> Gas only</div>
+                <div className="flex items-center gap-x-1"><span className="text-yellow-500">⛽</span> Gas only</div>
                 <div className="flex items-center gap-x-1"><span className="text-red-500">🚫</span> Prohibited</div>
               </div>
               <div>Vancouver Open Data + BCWS</div>
@@ -408,17 +451,17 @@ function App() {
           </div>
 
           {/* Nearby List */}
-          <div className="lg:col-span-3 bg-zinc-900 border border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 h-fit">
+          <div className="lg:col-span-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 h-fit shadow-sm">
             <div className="flex justify-between items-center mb-3 sm:mb-4 px-1">
               <div>
-                <div className="font-semibold text-sm sm:text-base">{t('list.title')}</div>
-                <div className="text-[11px] sm:text-xs text-emerald-400">
+                <div className="font-semibold text-sm sm:text-base text-zinc-900 dark:text-white">{t('list.title')}</div>
+                <div className="text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                   {t('list.sortedBy', { count: filteredParks.length })}
                 </div>
               </div>
               <button 
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
-                className="text-xs text-emerald-400 hover:text-emerald-300"
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
               >
                 {t('list.top')}
               </button>
@@ -455,7 +498,7 @@ function App() {
         />
       )}
 
-      <footer className="mt-12 sm:mt-16 border-t border-zinc-900 py-6 sm:py-8 text-center text-xs sm:text-sm text-zinc-500 px-4">
+      <footer className="mt-12 sm:mt-16 border-t border-zinc-200 dark:border-zinc-900 py-6 sm:py-8 text-center text-xs sm:text-sm text-zinc-500 px-4">
         Spark &amp; Park — 2026 Graduation Project • Built with React + Firebase by Jisol Kim • 
         For educational purposes in Vancouver, BC
       </footer>
