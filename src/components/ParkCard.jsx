@@ -1,45 +1,53 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
-export default function ParkCard({ park, onClick }) {
-  const getRiskBadge = (risk) => {
-    if (risk === 'low') return 'bg-emerald-900 text-emerald-300'
-    if (risk === 'moderate') return 'bg-yellow-900 text-yellow-300'
-    return 'bg-orange-900 text-orange-300'
+function ParkCard({ park, onClick }) {
+  const { t } = useTranslation()
+
+  let badgeColor = 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
+  let badgeText = t('card.noBbq')
+  if (park.bbq === 'charcoal') {
+    badgeColor = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
+    badgeText = t('card.charcoal')
+  } else if (park.bbq === 'gas-only') {
+    badgeColor = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-400'
+    badgeText = t('card.gasOnly')
   }
 
-  const getBBQBadge = (bbq) => {
-    if (bbq === 'charcoal') return 'bg-emerald-900 text-emerald-300'
-    if (bbq === 'gas-only') return 'bg-yellow-900 text-yellow-300'
-    return 'bg-red-900 text-red-300'
-  }
+  const riskColor = 
+    park.risk === 'high' ? 'text-red-600 dark:text-red-400' :
+    park.risk === 'moderate' ? 'text-yellow-600 dark:text-yellow-400' : 
+    'text-emerald-600 dark:text-emerald-400'
 
   return (
     <div 
       onClick={onClick}
-      className="bg-zinc-950 border border-zinc-800 hover:border-emerald-700 rounded-2xl p-4 cursor-pointer transition-all active:scale-[0.985]"
+      className="p-3.5 sm:p-4 bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800/80 hover:border-emerald-500/70 rounded-2xl cursor-pointer transition-all duration-150 active:scale-[0.985] group"
     >
-      <div className="font-semibold text-[15px]">{park.name}</div>
-      
-      <div className="flex items-center gap-x-2 mt-2">
-        <span className={`px-2.5 py-px text-[10px] rounded-2xl font-medium ${getBBQBadge(park.bbq)}`}>
-          {park.bbq === 'charcoal' ? 'Charcoal + Gas' : park.bbq === 'gas-only' ? 'Gas Only' : 'No BBQ'}
+      <div className="flex justify-between items-start gap-2">
+        <h3 className="font-semibold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+          {park.name}
+        </h3>
+        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg shrink-0 ${badgeColor}`}>
+          {badgeText}
         </span>
-        <span className="text-xs text-zinc-500">{park.distance}</span>
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-x-1">
-          <div className="flex text-amber-400 text-sm">
-            {'★'.repeat(Math.floor(park.rating))}
-            {'☆'.repeat(5 - Math.floor(park.rating))}
-          </div>
-          <span className="text-xs text-zinc-400">({park.reviewCount})</span>
-        </div>
-        
-        <div className={`px-2.5 py-px text-[10px] rounded-2xl font-medium ${getRiskBadge(park.risk)}`}>
-          {park.risk.charAt(0).toUpperCase() + park.risk.slice(1)} risk
-        </div>
+      <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center justify-between">
+        <span>📍 {park.distance} {t('card.fromLocation')}</span>
+        <span className="text-amber-500 font-medium">★ {park.rating || '4.0'}</span>
+      </div>
+
+      <div className="mt-2.5 pt-2 border-t border-zinc-200 dark:border-zinc-800/60 flex items-center justify-between text-[11px]">
+        <span className="text-zinc-400">
+          💬 {park.reviewCount || 0} {t('card.reviews')}
+        </span>
+        <span className={`font-semibold capitalize ${riskColor}`}>
+          {t('card.risk')}: {park.risk}
+        </span>
       </div>
     </div>
   )
 }
+
+export default ParkCard
