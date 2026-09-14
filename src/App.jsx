@@ -9,6 +9,8 @@ import ParkCard from './components/ParkCard'
 import { initialParks } from './data/parks'
 import { getVancouverFireRisk, fetchVancouverParks } from './data/fireService'
 import { getGoogleMapsDirectionsUrl, calculateDistanceKm } from './utils/geoUtils'
+// 구글 로그인 훅 추가
+import { useGoogleLogin } from '@react-oauth/google'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -33,7 +35,35 @@ function App() {
   const [userLocation, setUserLocation] = useState({ lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' })
   const [currentFireRisk, setCurrentFireRisk] = useState({ riskLevel: 'moderate', rawDesc: 'Loading...', updatedAt: '' })
 
-  // 다크/화이트 모드 상태 (시스템 기본값 감지 + localStorage 기억)
+  // 🌟 로그인 및 사용자 프로필 상태 관리
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [userProfile, setUserProfile] = useState(null)
+
+  // 🌟 구글 로그인 팝업 호출 및 토큰으로 유저 정보(이름, 프사) 가져오기
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        })
+        const data = await res.json()
+        setUserProfile(data) // 가져온 구글 계정 정보 저장
+        setIsLoggedIn(true)
+      } catch (err) {
+        console.error("Failed to fetch user info", err)
+      }
+    },
+    onError: (error) => console.error('Login Failed:', error)
+  })
+
+  // 🌟 로그아웃 처리
+  const handleLogout = () => {
+    setIsLoggedIn(false)
+    setUserProfile(null)
+    setIsDropdownOpen(false)
+  }
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme')
     if (savedTheme) return savedTheme === 'dark'
@@ -189,7 +219,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-200 transition-colors duration-200">
-      {/* Navbar */}
       <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-50 transition-colors duration-200">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 md:h-16 flex flex-col md:flex-row md:items-center justify-between gap-3">
           
@@ -204,7 +233,6 @@ function App() {
               </div>
             </div>
 
-            {/* 모바일 화면용 버튼 묶음 (다크모드 토글 + 언어 + 제보) */}
             <div className="flex items-center gap-x-2 md:hidden">
               <button
                 onClick={toggleDarkMode}
@@ -213,7 +241,6 @@ function App() {
               >
                 {isDarkMode ? '☀️' : '🌙'}
               </button>
-
               <select
                 value={i18n.language?.startsWith('ko') ? 'ko' : i18n.language?.startsWith('fr') ? 'fr' : i18n.language?.startsWith('zh') ? 'zh' : i18n.language?.startsWith('pa') ? 'pa' : 'en'}
                 onChange={(e) => changeLanguage(e.target.value)}
@@ -226,30 +253,9 @@ function App() {
                 <option value="zh">中文</option>
                 <option value="pa">ਪੰਜਾਬੀ</option>
               </select>
-
-              <button 
-                onClick={() => {
-                  const name = prompt("Enter park name:")
-                  if (name) {
-                    addNewPark({
-                      name,
-                      lat: 49.27 + (Math.random() - 0.5) * 0.08,
-                      lng: -123.12 + (Math.random() - 0.5) * 0.12,
-                      bbq: Math.random() > 0.5 ? "charcoal" : "gas-only",
-                      risk: currentFireRisk.riskLevel,
-                      facilities: ["restroom", "playground", "sports"].slice(0, 2 + Math.floor(Math.random() * 2)),
-                      description: "New park added by the community."
-                    })
-                  }
-                }}
-                className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-semibold"
-              >
-                {t('nav.add')}
-              </button>
             </div>
           </div>
 
-          {/* 검색창 */}
           <div className="w-full md:flex-1 md:max-w-md md:mx-6">
             <div className="relative">
               <input
@@ -263,7 +269,6 @@ function App() {
             </div>
           </div>
 
-          {/* 데스크톱 상단 우측 버튼 목록 */}
           <div className="hidden md:flex items-center gap-x-3">
             <button
               onClick={toggleDarkMode}
@@ -306,21 +311,66 @@ function App() {
               {t('nav.addPark')}
             </button>
 
-            <button
-              onClick={toggleVancouverDowntown}
-              title="Click to reset location to Vancouver Downtown"
-              className="flex items-center gap-x-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-emerald-600 px-3 py-1.5 rounded-3xl text-sm cursor-pointer transition-all"
+            {/* 🌟 로그인/프로필 드롭다운 영역 */}
+            <div 
+              className="relative"
+              onMouseEnter={() => isLoggedIn && setIsDropdownOpen(true)}
+              onMouseLeave={() => isLoggedIn && setIsDropdownOpen(false)}
             >
-              <div className="w-7 h-7 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold">JD</div>
-              <div className="text-left">
-                <div className="font-medium text-xs text-zinc-800 dark:text-zinc-200">Jisol Kim</div>
-                <div className="text-[10px] text-emerald-600 dark:text-emerald-400 -mt-0.5 max-w-[120px] truncate">
-                  📍 {userLocation.label}
-                </div>
-              </div>
-            </button>
-          </div>
+              {!isLoggedIn ? (
+                <button
+                  onClick={() => handleGoogleLogin()}
+                  className="flex items-center gap-x-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-emerald-600 px-4 py-1.5 rounded-3xl text-sm cursor-pointer transition-all text-zinc-800 dark:text-zinc-200 font-semibold"
+                >
+                  <i className="fa-brands fa-google text-red-500"></i>
+                  Sign in
+                </button>
+              ) : (
+                <button
+                  onClick={toggleVancouverDowntown}
+                  title="Click to reset location to Vancouver Downtown"
+                  className="flex items-center gap-x-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-emerald-600 px-3 py-1.5 rounded-3xl text-sm cursor-pointer transition-all"
+                >
+                  <div className="w-7 h-7 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold overflow-hidden">
+                    {userProfile?.picture ? (
+                      <img src={userProfile.picture} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      userProfile?.name?.charAt(0) || 'U'
+                    )}
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium text-xs text-zinc-800 dark:text-zinc-200">
+                      {userProfile?.name || 'User'}
+                    </div>
+                    <div className="text-[10px] text-emerald-600 dark:text-emerald-400 -mt-0.5 max-w-[120px] truncate">
+                      📍 {userLocation.label}
+                    </div>
+                  </div>
+                </button>
+              )}
 
+              {isLoggedIn && isDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="py-2">
+                    <button 
+                      onClick={() => alert("즐겨찾기한 공원 목록을 보여주는 페이지입니다.")}
+                      className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-x-3"
+                    >
+                      <span>🔖</span> Favorites
+                    </button>
+                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1"></div>
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center gap-x-3 font-medium"
+                    >
+                      <i className="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
         </div>
       </nav>
 
@@ -358,9 +408,7 @@ function App() {
           </div>
         </div>
 
-        {/* 3단 그리드 */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
-          
           <div className="lg:col-span-3">
             <Filters 
               filters={filters} 
@@ -390,7 +438,6 @@ function App() {
                   </Marker>
                 )}
                 
-                {/* 🛡️ 좌표 유효성 검증 필터 추가 (Leaflet Crash 완벽 방어) */}
                 {filteredParks
                   .filter(park => park && Number.isFinite(park.lat) && Number.isFinite(park.lng))
                   .map(park => {
@@ -448,7 +495,6 @@ function App() {
             </div>
           </div>
 
-          {/* Nearby List */}
           <div className="lg:col-span-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 h-fit shadow-sm">
             <div className="flex justify-between items-center mb-3 sm:mb-4 px-1">
               <div>
