@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
+import './i18n'
 // 구글 OAuth 프로바이더 임포트
 import { GoogleOAuthProvider } from '@react-oauth/google'
 
