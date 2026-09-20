@@ -71,10 +71,14 @@ function App() {
   const [userLocation, setUserLocation] = useState({ lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' })
   const [currentFireRisk, setCurrentFireRisk] = useState({ riskLevel: 'moderate', rawDesc: 'Loading...', updatedAt: '' })
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userProfile, setUserProfile] = useState(() => {
+    const savedUser = localStorage.getItem('sparkUser')
+    return savedUser ? JSON.parse(savedUser) : null
+  })
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return !!localStorage.getItem('sparkUser') // 정보가 있으면 true, 없으면 false
+  })
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [userProfile, setUserProfile] = useState(null)
-
   // 🌟 즐겨찾기 상태 추가
   const [favoriteParkIds, setFavoriteParkIds] = useState([])
   const [showFavorites, setShowFavorites] = useState(false) // 즐겨찾기 뷰 토글
@@ -137,6 +141,7 @@ function App() {
         const data = await res.json()
         setUserProfile(data)
         setIsLoggedIn(true)
+        localStorage.setItem('sparkUser', JSON.stringify(data))
       } catch (err) {
         console.error("Failed to fetch user info", err)
       }
@@ -149,6 +154,7 @@ function App() {
     setUserProfile(null)
     setIsDropdownOpen(false)
     setShowFavorites(false)
+    localStorage.removeItem('sparkUser')
   }
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
