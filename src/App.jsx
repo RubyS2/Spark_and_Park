@@ -11,9 +11,9 @@ import { getVancouverFireRisk, fetchVancouverParks } from './data/fireService'
 import { getGoogleMapsDirectionsUrl, calculateDistanceKm } from './utils/geoUtils'
 import { useGoogleLogin } from '@react-oauth/google'
 
-// 🌟 Firebase 연동을 위한 도구 추가
+// 🌟 Firebase 연동을 위한 도구 추가 (doc, getDoc, setDoc 추가)
 import { db } from './firebase'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -29,13 +29,11 @@ const userLocationIcon = L.divIcon({
   iconAnchor: [8, 8]
 })
 
-// 🌟 Firebase 리뷰 데이터를 한꺼번에 가져와서 공원 데이터와 합쳐주는 헬퍼 함수
 const fetchAndMergeReviews = async (parksData) => {
   try {
     const snapshot = await getDocs(collection(db, 'reviews'))
     const aggregates = {}
     
-    // DB의 모든 리뷰를 돌면서 공원별(parkId)로 별점 합계와 리뷰 개수 누적
     snapshot.forEach(doc => {
       const data = doc.data()
       const pid = data.parkId
@@ -46,7 +44,6 @@ const fetchAndMergeReviews = async (parksData) => {
       aggregates[pid].count += 1
     })
 
-    // 계산된 진짜 별점을 기존 공원 데이터에 덮어쓰기
     return parksData.map(park => {
       const agg = aggregates[park.id]
       if (agg) {
@@ -56,12 +53,11 @@ const fetchAndMergeReviews = async (parksData) => {
           rating: (agg.sum / agg.count).toFixed(1)
         }
       }
-      // 리뷰가 아예 없는 공원은 0으로 초기화
       return { ...park, reviewCount: 0, rating: '0.0' }
     })
   } catch (error) {
     console.error("리뷰 데이터 병합 에러:", error)
-    return parksData // 에러 나면 그냥 원래 데이터 반환
+    return parksData 
   }
 }
 
@@ -78,6 +74,59 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [userProfile, setUserProfile] = useState(null)
+
+  // 🌟 즐겨찾기 상태 추가
+  const [favoriteParkIds, setFavoriteParkIds] = useState([])
+  const [showFavorites, setShowFavorites] = useState(false) // 즐겨찾기 뷰 토글
+
+  // 🌟 로그인이 완료되거나 프로필이 변경될 때 Firebase에서 내 즐겨찾기 목록 가져오기
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (userProfile?.sub) {
+        try {
+          const docRef = doc(db, 'userFavorites', userProfile.sub)
+          const docSnap = await getDoc(docRef)
+          if (docSnap.exists()) {
+            setFavoriteParkIds(docSnap.data().parks || [])
+          } else {
+            setFavoriteParkIds([])
+          }
+        } catch (error) {
+          console.error("즐겨찾기 불러오기 에러:", error)
+        }
+      } else {
+        setFavoriteParkIds([])
+        setShowFavorites(false)
+      }
+    }
+    fetchFavorites()
+  }, [userProfile])
+
+  // 🌟 공원을 즐겨찾기에 추가/제거하는 함수 (나중에 ParkModal로 전달)
+  const toggleFavorite = async (parkId) => {
+    if (!userProfile) {
+      alert(t('modal.loginRequired'))
+      return
+    }
+    
+    // 이미 있으면 빼고, 없으면 넣기
+    const isFav = favoriteParkIds.includes(parkId)
+    const newFavs = isFav 
+      ? favoriteParkIds.filter(id => id !== parkId) 
+      : [...favoriteParkIds, parkId]
+    
+    setFavoriteParkIds(newFavs) // 화면 즉시 업데이트
+
+    try {
+      // Firebase 'userFavorites' 폴더의 '내 고유 ID' 문서에 배열 저장
+      await setDoc(doc(db, 'userFavorites', userProfile.sub), {
+        parks: newFavs
+      })
+    } catch (error) {
+      console.error("즐겨찾기 저장 에러:", error)
+      alert("즐겨찾기 업데이트 중 오류가 발생했습니다.")
+    }
+  }
 
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -99,6 +148,7 @@ function App() {
     setIsLoggedIn(false)
     setUserProfile(null)
     setIsDropdownOpen(false)
+    setShowFavorites(false)
   }
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -142,15 +192,14 @@ function App() {
 
       let currentPos = { lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' }
 
-      // 🌟 공원 데이터를 부르고 + Firebase 리뷰와 결합하는 통합 함수
       const loadParksWithReviews = async (riskLevel, pos) => {
-        setIsParksLoading(true) // 🌟 다운로드 시작 시 로딩 켜기
+        setIsParksLoading(true) 
         const apiParks = await fetchVancouverParks(riskLevel, pos)
         if (apiParks) {
           const mergedParks = await fetchAndMergeReviews(apiParks)
           setParks(mergedParks)
         }
-        setIsParksLoading(false) // 🌟 완료되면 로딩 끄기
+        setIsParksLoading(false) 
       }
 
       if (navigator.geolocation) {
@@ -187,6 +236,11 @@ function App() {
   useEffect(() => {
     let result = parks
 
+    // 🌟 즐겨찾기 필터 적용
+    if (showFavorites) {
+      result = result.filter(p => favoriteParkIds.includes(p.id))
+    }
+
     if (searchTerm) {
       result = result.filter(p => 
         (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -215,7 +269,7 @@ function App() {
     })
 
     setFilteredParks(result)
-  }, [parks, searchTerm, filters])
+  }, [parks, searchTerm, filters, showFavorites, favoriteParkIds])
 
   const handleFilterChange = (newFilters) => setFilters(newFilters)
   const handleParkClick = (park) => setSelectedPark(park)
@@ -259,7 +313,6 @@ function App() {
     setUserLocation(downtownPos)
     const apiParks = await fetchVancouverParks(currentFireRisk.riskLevel, downtownPos)
     if (apiParks) {
-      // 🌟 내 위치 초기화 시에도 파이어베이스 연동 데이터로 병합
       const mergedParks = await fetchAndMergeReviews(apiParks)
       setParks(mergedParks)
     }
@@ -397,21 +450,33 @@ function App() {
               )}
 
               {isLoggedIn && isDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="py-2">
-                    <button 
-                      onClick={() => alert(t('nav.favAlert'))}
-                      className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-x-3"
-                    >
-                      <span>🔖</span> {t('nav.favorites')}
-                    </button>
-                    <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1"></div>
-                    <button 
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center gap-x-3 font-medium"
-                    >
-                      <i className="fa-solid fa-arrow-right-from-bracket"></i> {t('nav.logout')}
-                    </button>
+                <div className="absolute right-0 top-full pt-2 z-50">
+                  <div className="w-60 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="py-2">
+                      {/* 🌟 드롭다운을 알림창 대신 진짜 필터 스위치로 변경 */}
+                      <button 
+                        onClick={() => {
+                          setShowFavorites(!showFavorites)
+                          setIsDropdownOpen(false)
+                        }}
+                        className="w-full text-left px-5 py-3 text-sm sm:text-base text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-x-3"
+                      >
+                        {showFavorites ? (
+                          <><span className="text-lg">🌍</span> {t('nav.showAll', '모든 공원 보기')}</>
+                        ) : (
+                          <><span className="text-lg">🔖</span> {t('nav.favorites')}</>
+                        )}
+                      </button>
+                      
+                      <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1.5"></div>
+                      
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full text-left px-5 py-3 text-sm sm:text-base text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center gap-x-3 font-medium"
+                      >
+                        <i className="fa-solid fa-arrow-right-from-bracket text-lg w-5 text-center"></i> {t('nav.logout')}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -557,7 +622,7 @@ function App() {
               </button>
             </div>
 
-           <div className="space-y-3 max-h-[420px] sm:max-h-[540px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-[420px] sm:max-h-[540px] overflow-y-auto pr-1">
               {isParksLoading ? (
                 <div className="text-center py-12 flex flex-col items-center justify-center">
                   <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
@@ -579,23 +644,26 @@ function App() {
                 </div>
               )}
             </div>
+          </div>
 
         </div>
       </div>
 
+      {/* 🌟 ParkModal로 상태와 함수 넘기기 */}
       {selectedPark && (
         <ParkModal 
           park={selectedPark} 
           onClose={closeModal} 
           onUpdate={updatePark}
           userProfile={userProfile} 
+          isFavorite={favoriteParkIds.includes(selectedPark.id)}
+          onToggleFavorite={() => toggleFavorite(selectedPark.id)}
         />
       )}
 
       <footer className="mt-12 sm:mt-16 border-t border-zinc-200 dark:border-zinc-900 py-6 sm:py-8 text-center text-xs sm:text-sm text-zinc-500 px-4">
         {t('footer.copyright')}
       </footer>
-    </div>
     </div>
   )
 }
