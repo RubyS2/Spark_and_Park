@@ -186,7 +186,7 @@ function App() {
     const newPark = {
       ...newParkData,
       id: Date.now(),
-      rating: 4.0,
+      rating: 0.0,
       reviewCount: 0,
       reviews: [],
       distance: "0.1 km"

@@ -51,7 +51,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
   const reviewCount = reviews.length
   const averageRating = reviewCount > 0 
     ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1)
-    : (park.rating || '4.0')
+    : (park.rating || '0.0')
 
   const getRiskInfo = (risk) => {
     if (risk === 'low') {
