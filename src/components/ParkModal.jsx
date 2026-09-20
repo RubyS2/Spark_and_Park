@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { db } from '../firebase' // Firebase DB 연동
+import { db } from '../firebase' 
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore'
 
-// 💡 주의: App.jsx에서 userProfile을 넘겨주도록 추가했으므로 프롭스에 추가되었습니다!
-export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
+// 🌟 App.jsx에서 보내준 isFavorite과 onToggleFavorite 프롭스 추가
+export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavorite, onToggleFavorite }) {
   const { t } = useTranslation()
   const [showRating, setShowRating] = useState(false)
   const [ratingValue, setRatingValue] = useState(5)
   const [reviewText, setReviewText] = useState('')
   const [hoverRating, setHoverRating] = useState(0)
   
-  // 🌟 Firebase 연동을 위한 새로운 상태(State)
   const [reviews, setReviews] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // 🌟 모달이 열릴 때 Firebase에서 리뷰 데이터 불러오기
   useEffect(() => {
     const fetchReviews = async () => {
       if (!park) return
@@ -31,7 +29,6 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
           id: doc.id,
           ...doc.data()
         }))
-        // 최신순 정렬
         fetchedReviews.sort((a, b) => b.createdAt - a.createdAt)
         
         setReviews(fetchedReviews)
@@ -47,11 +44,10 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
 
   if (!park) return null
 
-  // 🌟 실제 리뷰 데이터 기반으로 실시간 별점/리뷰수 계산
   const reviewCount = reviews.length
   const averageRating = reviewCount > 0 
     ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1)
-    : (park.rating || '0.0')
+    : '0.0' // 🌟 리뷰가 없을 때는 무조건 0.0으로 고정되도록 수정 완료!
 
   const getRiskInfo = (risk) => {
     if (risk === 'low') {
@@ -77,10 +73,9 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
 
   const riskInfo = getRiskInfo(park.risk)
 
-  // 🌟 Firebase에 진짜 리뷰 저장하기
   const handleAddReview = async () => {
     if (!userProfile) {
-      alert(t('modal.loginRequired'))
+      alert(t('modal.loginRequired', '리뷰를 작성하려면 로그인해 주세요!'))
       return
     }
     if (!reviewText.trim() && ratingValue === 0) return
@@ -95,14 +90,11 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
     }
 
     try {
-      // Firebase DB 'reviews' 폴더에 저장
       const docRef = await addDoc(collection(db, 'reviews'), newReviewData)
       
-      // 저장 성공 시 화면 즉시 업데이트
       const addedReview = { id: docRef.id, ...newReviewData }
       setReviews([addedReview, ...reviews])
       
-      // 모달 바깥의 지도/리스트도 업데이트 되도록 onUpdate 호출
       const updatedPark = {
         ...park,
         reviewCount: reviewCount + 1,
@@ -115,23 +107,12 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
       setRatingValue(5)
     } catch (error) {
       console.error("리뷰 저장 에러:", error)
-      alert(t('modal.reviewError'))
+      alert(t('modal.reviewError', '리뷰 저장 중 문제가 발생했습니다.'))
     }
   }
 
   const getDirections = () => {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${park.lat},${park.lng}`, '_blank')
-  }
-
-  const saveToFavorites = () => {
-    const saved = JSON.parse(localStorage.getItem('sparkParkFavorites') || '[]')
-    if (!saved.includes(park.id)) {
-      saved.push(park.id)
-      localStorage.setItem('sparkParkFavorites', JSON.stringify(saved))
-      alert(t('modal.savedAlert', { name: park.name }))
-    } else {
-      alert(t('modal.alreadySaved'))
-    }
   }
 
   const getFacilityName = (fac) => {
@@ -283,11 +264,10 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
                 </button>
               </div>
 
-              {/* 🌟 Firebase에서 가져온 실제 리뷰 목록 뿌려주기 */}
               <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs sm:text-sm">
                 {isLoading ? (
                   <div className="h-full flex items-center justify-center text-zinc-500 text-xs animate-pulse">
-                    {t('modal.loadingReviews')}
+                    {t('modal.loadingReviews', '리뷰 데이터를 불러오는 중...')}
                   </div>
                 ) : reviews.length > 0 ? (
                   reviews.map((review) => (
@@ -301,7 +281,9 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
                               {review.userName ? review.userName.charAt(0) : 'U'}
                             </div>
                           )}
-                          <span className="font-medium text-zinc-800 dark:text-zinc-200">{review.userName || t('modal.anonymous')}</span>
+                          <span className="font-medium text-zinc-800 dark:text-zinc-200">
+                            {review.userName || t('modal.anonymous', '익명 사용자')}
+                          </span>
                         </div>
                         <span className="text-amber-400 text-xs">{'★'.repeat(review.rating || 5)}</span>
                       </div>
@@ -321,6 +303,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
           </div>
         </div>
 
+        {/* Footer Actions */}
         <div className="px-5 sm:px-8 py-3.5 sm:py-5 border-t border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur flex gap-3 sm:gap-x-4">
           <button 
             onClick={getDirections}
@@ -328,11 +311,17 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
           >
             {t('modal.getDirections')}
           </button>
+          
+          {/* 🌟 Firebase와 연동된 즐겨찾기 버튼 (저장 상태에 따라 디자인 변경) */}
           <button 
-            onClick={saveToFavorites}
-            className="flex-1 py-3 sm:py-4 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-semibold text-zinc-700 dark:text-zinc-300 rounded-2xl sm:rounded-3xl flex items-center justify-center gap-x-2 text-xs sm:text-sm active:scale-[0.985] transition-all"
+            onClick={onToggleFavorite}
+            className={`flex-1 py-3 sm:py-4 border font-semibold rounded-2xl sm:rounded-3xl flex items-center justify-center gap-x-2 text-xs sm:text-sm active:scale-[0.985] transition-all ${
+              isFavorite 
+                ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/50 hover:bg-rose-100 dark:hover:bg-rose-900/50' 
+                : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+            }`}
           >
-            {t('modal.saveFavorites')}
+            {isFavorite ? `❤️ ${t('modal.saved', '저장됨')}` : `🤍 ${t('modal.saveFavorites')}`}
           </button>
         </div>
       </div>
