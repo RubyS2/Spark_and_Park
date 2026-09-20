@@ -8,7 +8,8 @@
     "logout": "로그아웃",
     "favAlert": "즐겨찾기 페이지는 준비 중입니다.",
     "addParkPrompt": "새로운 공원 이름을 입력하세요:",
-    "showAll": "모든 공원 보기"
+    "showAll": "모든 공원 보기",
+    "myReviews": "나의 리뷰"
   },
   "hero": {
     "title": "완벽한 밴쿠버 BBQ 공원 찾기",

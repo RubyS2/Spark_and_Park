@@ -8,7 +8,8 @@
     "logout": "登出",
     "favAlert": "收藏夹页面即将推出。",
     "addParkPrompt": "请输入新公园名称：",
-    "showAll": "显示所有公园"
+    "showAll": "显示所有公园",
+    "myReviews": "我的评论"
   },
   "hero": {
     "title": "尋找溫哥華最佳烤肉地點",

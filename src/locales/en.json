@@ -8,7 +8,8 @@
     "logout": "Logout",
     "favAlert": "Favorites page is coming soon.",
     "addParkPrompt": "Enter new park name:",
-    "showAll": "Show all parks"
+    "showAll": "Show all parks",
+    "myReviews": "My Reviews"
   },
   "hero": {
     "title": "Find the perfect spot for BBQ",

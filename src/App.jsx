@@ -11,9 +11,9 @@ import { getVancouverFireRisk, fetchVancouverParks } from './data/fireService'
 import { getGoogleMapsDirectionsUrl, calculateDistanceKm } from './utils/geoUtils'
 import { useGoogleLogin } from '@react-oauth/google'
 
-// 🌟 Firebase 연동을 위한 도구 추가 (doc, getDoc, setDoc 추가)
+// 🌟 Firebase 도구에 query, where 추가
 import { db } from './firebase'
-import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore'
+import { collection, getDocs, doc, getDoc, setDoc, query, where } from 'firebase/firestore'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -76,17 +76,20 @@ function App() {
     return savedUser ? JSON.parse(savedUser) : null
   })
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return !!localStorage.getItem('sparkUser') // 정보가 있으면 true, 없으면 false
+    return !!localStorage.getItem('sparkUser')
   })
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  // 🌟 즐겨찾기 상태 추가
-  const [favoriteParkIds, setFavoriteParkIds] = useState([])
-  const [showFavorites, setShowFavorites] = useState(false) // 즐겨찾기 뷰 토글
 
-  // 🌟 로그인이 완료되거나 프로필이 변경될 때 Firebase에서 내 즐겨찾기 목록 가져오기
+  // 🌟 화면 모드 (모든 공원, 즐겨찾기, 나의 리뷰) 상태
+  const [viewMode, setViewMode] = useState('all') 
+  const [favoriteParkIds, setFavoriteParkIds] = useState([])
+  const [myReviewedParkIds, setMyReviewedParkIds] = useState([])
+
+  // 🌟 로그인 시 즐겨찾기 목록과 내 리뷰 목록 가져오기
   useEffect(() => {
-    const fetchFavorites = async () => {
+    const fetchUserData = async () => {
       if (userProfile?.sub) {
+        // 1. 즐겨찾기 가져오기
         try {
           const docRef = doc(db, 'userFavorites', userProfile.sub)
           const docSnap = await getDoc(docRef)
@@ -98,34 +101,41 @@ function App() {
         } catch (error) {
           console.error("즐겨찾기 불러오기 에러:", error)
         }
+
+        // 2. 내가 작성한 리뷰 공원 ID 가져오기
+        try {
+          const q = query(collection(db, 'reviews'), where('userName', '==', userProfile.name))
+          const querySnapshot = await getDocs(q)
+          const parkIds = querySnapshot.docs.map(doc => doc.data().parkId)
+          // 중복 ID 제거 (같은 공원에 리뷰 2개 썼을 경우 대비)
+          setMyReviewedParkIds([...new Set(parkIds)])
+        } catch (error) {
+          console.error("나의 리뷰 불러오기 에러:", error)
+        }
       } else {
         setFavoriteParkIds([])
-        setShowFavorites(false)
+        setMyReviewedParkIds([])
+        setViewMode('all')
       }
     }
-    fetchFavorites()
+    fetchUserData()
   }, [userProfile])
 
-  // 🌟 공원을 즐겨찾기에 추가/제거하는 함수 (나중에 ParkModal로 전달)
   const toggleFavorite = async (parkId) => {
     if (!userProfile) {
       alert(t('modal.loginRequired'))
       return
     }
     
-    // 이미 있으면 빼고, 없으면 넣기
     const isFav = favoriteParkIds.includes(parkId)
     const newFavs = isFav 
       ? favoriteParkIds.filter(id => id !== parkId) 
       : [...favoriteParkIds, parkId]
     
-    setFavoriteParkIds(newFavs) // 화면 즉시 업데이트
+    setFavoriteParkIds(newFavs)
 
     try {
-      // Firebase 'userFavorites' 폴더의 '내 고유 ID' 문서에 배열 저장
-      await setDoc(doc(db, 'userFavorites', userProfile.sub), {
-        parks: newFavs
-      })
+      await setDoc(doc(db, 'userFavorites', userProfile.sub), { parks: newFavs })
     } catch (error) {
       console.error("즐겨찾기 저장 에러:", error)
       alert("즐겨찾기 업데이트 중 오류가 발생했습니다.")
@@ -153,7 +163,7 @@ function App() {
     setIsLoggedIn(false)
     setUserProfile(null)
     setIsDropdownOpen(false)
-    setShowFavorites(false)
+    setViewMode('all')
     localStorage.removeItem('sparkUser')
   }
 
@@ -242,9 +252,11 @@ function App() {
   useEffect(() => {
     let result = parks
 
-    // 🌟 즐겨찾기 필터 적용
-    if (showFavorites) {
+    // 🌟 화면 모드(viewMode)에 따른 필터링 적용
+    if (viewMode === 'favorites') {
       result = result.filter(p => favoriteParkIds.includes(p.id))
+    } else if (viewMode === 'reviews') {
+      result = result.filter(p => myReviewedParkIds.includes(p.id))
     }
 
     if (searchTerm) {
@@ -275,7 +287,7 @@ function App() {
     })
 
     setFilteredParks(result)
-  }, [parks, searchTerm, filters, showFavorites, favoriteParkIds])
+  }, [parks, searchTerm, filters, viewMode, favoriteParkIds, myReviewedParkIds])
 
   const handleFilterChange = (newFilters) => setFilters(newFilters)
   const handleParkClick = (park) => setSelectedPark(park)
@@ -284,6 +296,11 @@ function App() {
   const updatePark = (updatedPark) => {
     setParks(prev => prev.map(p => p.id === updatedPark.id ? updatedPark : p))
     setSelectedPark(updatedPark)
+    
+    // 리뷰 작성 시 내 리뷰 목록(myReviewedParkIds)에 즉시 추가하여 뷰 업데이트
+    if (!myReviewedParkIds.includes(updatedPark.id)) {
+      setMyReviewedParkIds(prev => [...prev, updatedPark.id])
+    }
   }
 
   const addNewPark = (newParkData) => {
@@ -458,23 +475,30 @@ function App() {
               {isLoggedIn && isDropdownOpen && (
                 <div className="absolute right-0 top-full pt-2 z-50">
                   <div className="w-60 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="py-2">
-                      {/* 🌟 드롭다운을 알림창 대신 진짜 필터 스위치로 변경 */}
+                    <div className="py-2 flex flex-col">
+                      {/* 🌟 3가지 모드 선택 메뉴 구성 */}
                       <button 
-                        onClick={() => {
-                          setShowFavorites(!showFavorites)
-                          setIsDropdownOpen(false)
-                        }}
-                        className="w-full text-left px-5 py-3 text-sm sm:text-base text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-x-3"
+                        onClick={() => { setViewMode('all'); setIsDropdownOpen(false) }}
+                        className={`text-left px-5 py-3 text-sm sm:text-base flex items-center gap-x-3 transition-colors ${viewMode === 'all' ? 'bg-zinc-50 dark:bg-zinc-800/50 font-semibold text-emerald-600' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
                       >
-                        {showFavorites ? (
-                          <><span className="text-lg">🌍</span> {t('nav.showAll')}</>
-                        ) : (
-                          <><span className="text-lg">❤️</span> {t('nav.favorites')}</>
-                        )}
+                        <span className="text-lg">🌍</span> {t('nav.showAll')}
                       </button>
                       
-                      <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1.5"></div>
+                      <button 
+                        onClick={() => { setViewMode('favorites'); setIsDropdownOpen(false) }}
+                        className={`text-left px-5 py-3 text-sm sm:text-base flex items-center gap-x-3 transition-colors ${viewMode === 'favorites' ? 'bg-zinc-50 dark:bg-zinc-800/50 font-semibold text-emerald-600' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+                      >
+                        <span className="text-lg">❤️</span> {t('nav.favorites')}
+                      </button>
+
+                      <button 
+                        onClick={() => { setViewMode('reviews'); setIsDropdownOpen(false) }}
+                        className={`text-left px-5 py-3 text-sm sm:text-base flex items-center gap-x-3 transition-colors ${viewMode === 'reviews' ? 'bg-zinc-50 dark:bg-zinc-800/50 font-semibold text-emerald-600' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+                      >
+                        <span className="text-lg">📝</span> {t('nav.myReviews')}
+                      </button>
+                      
+                      <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1.5 mx-2"></div>
                       
                       <button 
                         onClick={handleLogout}
@@ -655,7 +679,6 @@ function App() {
         </div>
       </div>
 
-      {/* 🌟 ParkModal로 상태와 함수 넘기기 */}
       {selectedPark && (
         <ParkModal 
           park={selectedPark} 

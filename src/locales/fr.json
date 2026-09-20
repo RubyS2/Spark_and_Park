@@ -8,7 +8,8 @@
     "logout": "Se déconnecter",
     "favAlert": "La page des favoris sera bientôt disponible.",
     "addParkPrompt": "Entrez le nom du nouveau parc :",
-    "showAll": "Afficher tous les parcs"
+    "showAll": "Afficher tous les parcs",
+    "myReviews": "Mes avis"
   },
   "hero": {
     "title": "Trouvez l'endroit idéal pour un barbecue",
