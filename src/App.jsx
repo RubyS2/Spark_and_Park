@@ -67,8 +67,9 @@ const fetchAndMergeReviews = async (parksData) => {
 
 function App() {
   const { t, i18n } = useTranslation()
-  const [parks, setParks] = useState(initialParks)
-  const [filteredParks, setFilteredParks] = useState(initialParks)
+  const [parks, setParks] = useState([])
+  const [filteredParks, setFilteredParks] = useState([])
+  const [isParksLoading, setIsParksLoading] = useState(true)
   const [selectedPark, setSelectedPark] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [userLocation, setUserLocation] = useState({ lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' })
@@ -143,11 +144,13 @@ function App() {
 
       // 🌟 공원 데이터를 부르고 + Firebase 리뷰와 결합하는 통합 함수
       const loadParksWithReviews = async (riskLevel, pos) => {
+        setIsParksLoading(true) // 🌟 다운로드 시작 시 로딩 켜기
         const apiParks = await fetchVancouverParks(riskLevel, pos)
         if (apiParks) {
           const mergedParks = await fetchAndMergeReviews(apiParks)
           setParks(mergedParks)
         }
+        setIsParksLoading(false) // 🌟 완료되면 로딩 끄기
       }
 
       if (navigator.geolocation) {
@@ -554,11 +557,15 @@ function App() {
               </button>
             </div>
 
-            <div className="space-y-3 max-h-[420px] sm:max-h-[540px] overflow-y-auto pr-1">
-              {filteredParks.length > 0 ? (
+           <div className="space-y-3 max-h-[420px] sm:max-h-[540px] overflow-y-auto pr-1">
+              {isParksLoading ? (
+                <div className="text-center py-12 flex flex-col items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">실시간 밴쿠버 공원 데이터를 불러오는 중...</p>
+                </div>
+              ) : filteredParks.length > 0 ? (
                 filteredParks
                   .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
-                  .slice(0, 15)
                   .map(park => (
                     <ParkCard 
                       key={park.id} 
@@ -572,7 +579,6 @@ function App() {
                 </div>
               )}
             </div>
-          </div>
 
         </div>
       </div>
@@ -590,6 +596,7 @@ function App() {
         Spark &amp; Park — 2026 Graduation Project • Built with React + Firebase by Jisol Kim • 
         For educational purposes in Vancouver, BC
       </footer>
+    </div>
     </div>
   )
 }
