@@ -80,7 +80,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
   // 🌟 Firebase에 진짜 리뷰 저장하기
   const handleAddReview = async () => {
     if (!userProfile) {
-      alert("리뷰를 작성하려면 오른쪽 위 버튼으로 로그인해 주세요!")
+      alert(t('modal.loginRequired'))
       return
     }
     if (!reviewText.trim() && ratingValue === 0) return
@@ -115,7 +115,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
       setRatingValue(5)
     } catch (error) {
       console.error("리뷰 저장 에러:", error)
-      alert("리뷰 저장 중 문제가 발생했습니다.")
+      alert(t('modal.reviewError'))
     }
   }
 
@@ -287,7 +287,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
               <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs sm:text-sm">
                 {isLoading ? (
                   <div className="h-full flex items-center justify-center text-zinc-500 text-xs animate-pulse">
-                    로딩 중...
+                    {t('modal.loadingReviews')}
                   </div>
                 ) : reviews.length > 0 ? (
                   reviews.map((review) => (
@@ -301,7 +301,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
                               {review.userName ? review.userName.charAt(0) : 'U'}
                             </div>
                           )}
-                          <span className="font-medium text-zinc-800 dark:text-zinc-200">{review.userName || '익명'}</span>
+                          <span className="font-medium text-zinc-800 dark:text-zinc-200">{review.userName || t('modal.anonymous')}</span>
                         </div>
                         <span className="text-amber-400 text-xs">{'★'.repeat(review.rating || 5)}</span>
                       </div>

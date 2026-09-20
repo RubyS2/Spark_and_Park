@@ -2,7 +2,12 @@
   "nav": {
     "searchPlaceholder": "搜尋公園或社區...",
     "addPark": "+ 新增公園",
-    "add": "+ 新增"
+    "add": "+ 新增",
+    "signIn": "登录",
+    "favorites": "收藏夹",
+    "logout": "登出",
+    "favAlert": "收藏夹页面即将推出。",
+    "addParkPrompt": "请输入新公园名称："
   },
   "hero": {
     "title": "尋找溫哥華最佳烤肉地點",
@@ -31,14 +36,16 @@
     "title": "附近公園",
     "sortedBy": "按距離排序 • {{count}} 個結果",
     "top": "頂部 ↑",
-    "noParks": "找不到符合條件的公園。\n請嘗試擴大搜尋範圍。"
+    "noParks": "找不到符合條件的公園。\n請嘗試擴大搜尋範圍。",
+    "loading": "正在加载温哥华公园实时数据..."
   },
   "popup": {
     "charcoalGas": "木炭 + 瓦斯",
     "gasOnly": "僅限瓦斯",
     "noBbq": "禁止燒烤",
     "risk": "風險等級",
-    "getDirections": "🗺️ 規劃路線"
+    "getDirections": "🗺️ 規劃路線",
+    "youAreHere": "📍 你在这里"
   },
   "card": {
     "fromLocation": "距您的位置",
@@ -49,6 +56,10 @@
     "risk": "風險"
   },
   "modal": {
+    "loginRequired": "请先登录再撰写评论！",
+    "reviewError": "保存评论时出错。",
+    "loadingReviews": "正在加载评论...",
+    "anonymous": "匿名",
     "fromLocation": "距目前位置",
     "bbqRules": "燒烤法規",
     "charcoalAllowed": "🔥 允許木炭",
@@ -87,5 +98,8 @@
     "cancel": "取消",
     "submitReview": "提交評價",
     "close": "關閉"
+  },
+  "footer": {
+    "copyright": "Spark & Park — 2026 毕业项目 • 由 Jisol Kim 使用 React + Firebase 制作 • 仅供温哥华教育使用"
   }
 }

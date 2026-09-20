@@ -2,7 +2,12 @@
   "nav": {
     "searchPlaceholder": "Search parks or neighborhoods...",
     "addPark": "+ Add Park",
-    "add": "+ Add"
+    "add": "+ Add",
+    "signIn": "Sign in",
+    "favorites": "Favorites",
+    "logout": "Logout",
+    "favAlert": "Favorites page is coming soon.",
+    "addParkPrompt": "Enter new park name:"
   },
   "hero": {
     "title": "Find the perfect spot for BBQ",
@@ -31,6 +36,7 @@
     "title": "Nearby Parks",
     "sortedBy": "Sorted by distance • {{count}} results",
     "top": "TOP ↑",
+    "loading": "Loading live Vancouver park data...",
     "noParks": "No parks match your filters.\nTry broadening your search."
   },
   "popup": {
@@ -38,7 +44,8 @@
     "gasOnly": "Gas only",
     "noBbq": "No BBQ",
     "risk": "Risk",
-    "getDirections": "🗺️ Get Directions"
+    "getDirections": "🗺️ Get Directions",
+    "youAreHere": "📍 You are here"
   },
   "card": {
     "fromLocation": "from your location",
@@ -86,6 +93,13 @@
     "ratePlaceholder": "Share crowd level, cleanliness, or tips... (optional)",
     "cancel": "Cancel",
     "submitReview": "Submit Review",
-    "close": "Close"
+    "close": "Close",
+    "loginRequired": "Please sign in to write a review!",
+    "reviewError": "An error occurred while saving the review.",
+    "loadingReviews": "Loading reviews...",
+    "anonymous": "Anonymous"
+  },
+  "footer": {
+    "copyright": "Spark & Park — 2026 Graduation Project • Built with React + Firebase by Jisol Kim • For educational purposes in Vancouver, BC"
   }
 }

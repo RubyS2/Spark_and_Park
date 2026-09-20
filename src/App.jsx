@@ -341,7 +341,7 @@ function App() {
 
             <button 
               onClick={() => {
-                const name = prompt("Enter new park name:")
+                const name = prompt(t('nav.addParkPrompt'))
                 if (name) {
                   addNewPark({
                     name,
@@ -370,7 +370,7 @@ function App() {
                   className="flex items-center gap-x-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-emerald-600 px-4 py-1.5 rounded-3xl text-sm cursor-pointer transition-all text-zinc-800 dark:text-zinc-200 font-semibold"
                 >
                   <i className="fa-brands fa-google text-red-500"></i>
-                  Sign in
+                  {t('nav.signIn')}
                 </button>
               ) : (
                 <button
@@ -400,17 +400,17 @@ function App() {
                 <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="py-2">
                     <button 
-                      onClick={() => alert("즐겨찾기한 공원 목록을 보여주는 페이지입니다.")}
+                      onClick={() => alert(t('nav.favAlert'))}
                       className="w-full text-left px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-x-3"
                     >
-                      <span>🔖</span> Favorites
+                      <span>🔖</span> {t('nav.favorites')}
                     </button>
                     <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1"></div>
                     <button 
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center gap-x-3 font-medium"
                     >
-                      <i className="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                      <i className="fa-solid fa-arrow-right-from-bracket"></i> {t('nav.logout')}
                     </button>
                   </div>
                 </div>
@@ -479,7 +479,7 @@ function App() {
                 {userLocation.isRealGps && Number.isFinite(userLocation.lat) && Number.isFinite(userLocation.lng) && (
                   <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
                     <Popup>
-                      <div className="font-bold text-blue-600">📍 You are here</div>
+                      <div className="font-bold text-blue-600">{t('popup.youAreHere')}</div>
                     </Popup>
                   </Marker>
                 )}
@@ -561,7 +561,7 @@ function App() {
               {isParksLoading ? (
                 <div className="text-center py-12 flex flex-col items-center justify-center">
                   <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">실시간 밴쿠버 공원 데이터를 불러오는 중...</p>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">{t('list.loading')}</p>
                 </div>
               ) : filteredParks.length > 0 ? (
                 filteredParks
@@ -593,8 +593,7 @@ function App() {
       )}
 
       <footer className="mt-12 sm:mt-16 border-t border-zinc-200 dark:border-zinc-900 py-6 sm:py-8 text-center text-xs sm:text-sm text-zinc-500 px-4">
-        Spark &amp; Park — 2026 Graduation Project • Built with React + Firebase by Jisol Kim • 
-        For educational purposes in Vancouver, BC
+        {t('footer.copyright')}
       </footer>
     </div>
     </div>
