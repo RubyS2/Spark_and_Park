@@ -321,8 +321,9 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                 : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
             }`}
           >
-            {isFavorite ? `❤️ ${t('modal.saved', '저장됨')}` : `🤍 ${t('modal.saveFavorites')}`}
-          </button>
+            <span className="text-lg">{isFavorite ? '❤️' : '🤍'}</span>
+            <span>{isFavorite ? t('modal.saved') : t('modal.saveFavorites')}</span>
+    </button>
         </div>
       </div>
 

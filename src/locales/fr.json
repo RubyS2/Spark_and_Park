@@ -7,7 +7,8 @@
     "favorites": "Favoris",
     "logout": "Se déconnecter",
     "favAlert": "La page des favoris sera bientôt disponible.",
-    "addParkPrompt": "Entrez le nom du nouveau parc :"
+    "addParkPrompt": "Entrez le nom du nouveau parc :",
+    "showAll": "Afficher tous les parcs"
   },
   "hero": {
     "title": "Trouvez l'endroit idéal pour un barbecue",
@@ -85,7 +86,6 @@
     "addNote": "+ Ajouter une note",
     "noReviews": "Aucun avis pour le moment.\nPartagez votre expérience !",
     "getDirections": "🧭 Itinéraire",
-    "saveFavorites": "🔖 Ajouter aux favoris",
     "savedAlert": "{{name}} ajouté aux favoris !",
     "alreadySaved": "Déjà dans vos favoris",
     "rateTitle": "Noter {{name}}",
@@ -97,7 +97,9 @@
     "loginRequired": "Veuillez vous connecter pour écrire un avis !",
     "reviewError": "Une erreur s'est produite lors de l'enregistrement de l'avis.",
     "loadingReviews": "Chargement des avis...",
-    "anonymous": "Anonyme"
+    "anonymous": "Anonyme",
+    "saved": "Enregistré",
+    "saveFavorites": "Ajouter aux favoris"
   },
   "footer": {
     "copyright": "Spark & Park — Projet de fin d'études 2026 • Créé avec React + Firebase par Jisol Kim"

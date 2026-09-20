@@ -7,7 +7,8 @@
     "favorites": "收藏夹",
     "logout": "登出",
     "favAlert": "收藏夹页面即将推出。",
-    "addParkPrompt": "请输入新公园名称："
+    "addParkPrompt": "请输入新公园名称：",
+    "showAll": "显示所有公园"
   },
   "hero": {
     "title": "尋找溫哥華最佳烤肉地點",
@@ -89,7 +90,6 @@
     "addNote": "+ 新增筆記",
     "noReviews": "目前暫無評論。\n歡迎分享您的第一手體驗！",
     "getDirections": "🧭 規劃路線",
-    "saveFavorites": "🔖 收藏此公園",
     "savedAlert": "{{name}} 已儲存至我的最愛！",
     "alreadySaved": "已在您的收藏名單中",
     "rateTitle": "評價 {{name}}",
@@ -97,7 +97,9 @@
     "ratePlaceholder": "分享擁擠程度、燒烤爐清潔度或實用建議...",
     "cancel": "取消",
     "submitReview": "提交評價",
-    "close": "關閉"
+    "close": "關閉",
+    "saved": "已保存",
+    "saveFavorites": "保存到收藏夹"
   },
   "footer": {
     "copyright": "Spark & Park — 2026 毕业项目 • 由 Jisol Kim 使用 React + Firebase 制作"

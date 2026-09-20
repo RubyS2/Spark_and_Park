@@ -462,9 +462,9 @@ function App() {
                         className="w-full text-left px-5 py-3 text-sm sm:text-base text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-x-3"
                       >
                         {showFavorites ? (
-                          <><span className="text-lg">🌍</span> {t('nav.showAll', '모든 공원 보기')}</>
+                          <><span className="text-lg">🌍</span> {t('nav.showAll')}</>
                         ) : (
-                          <><span className="text-lg">🔖</span> {t('nav.favorites')}</>
+                          <><span className="text-lg">❤️</span> {t('nav.favorites')}</>
                         )}
                       </button>
                       

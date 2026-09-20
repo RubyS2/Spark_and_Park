@@ -7,7 +7,8 @@
     "favorites": "Favorites",
     "logout": "Logout",
     "favAlert": "Favorites page is coming soon.",
-    "addParkPrompt": "Enter new park name:"
+    "addParkPrompt": "Enter new park name:",
+    "showAll": "Show all parks"
   },
   "hero": {
     "title": "Find the perfect spot for BBQ",
@@ -85,7 +86,6 @@
     "addNote": "+ Add note",
     "noReviews": "No reviews yet.\nBe the first to share your experience!",
     "getDirections": "🧭 Get Directions",
-    "saveFavorites": "🔖 Save to Favorites",
     "savedAlert": "{{name}} saved to favorites!",
     "alreadySaved": "Already in your favorites",
     "rateTitle": "Rate {{name}}",
@@ -97,7 +97,9 @@
     "loginRequired": "Please sign in to write a review!",
     "reviewError": "An error occurred while saving the review.",
     "loadingReviews": "Loading reviews...",
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "saved": "Saved",
+    "saveFavorites": "Save to Favorites"
   },
   "footer": {
     "copyright": "Spark & Park — 2026 Graduation Project • Built with React + Firebase by Jisol Kim"
