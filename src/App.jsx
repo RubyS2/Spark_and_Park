@@ -9,8 +9,11 @@ import ParkCard from './components/ParkCard'
 import { initialParks } from './data/parks'
 import { getVancouverFireRisk, fetchVancouverParks } from './data/fireService'
 import { getGoogleMapsDirectionsUrl, calculateDistanceKm } from './utils/geoUtils'
-// 구글 로그인 훅 추가
 import { useGoogleLogin } from '@react-oauth/google'
+
+// 🌟 Firebase 연동을 위한 도구 추가
+import { db } from './firebase'
+import { collection, getDocs } from 'firebase/firestore'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -26,6 +29,42 @@ const userLocationIcon = L.divIcon({
   iconAnchor: [8, 8]
 })
 
+// 🌟 Firebase 리뷰 데이터를 한꺼번에 가져와서 공원 데이터와 합쳐주는 헬퍼 함수
+const fetchAndMergeReviews = async (parksData) => {
+  try {
+    const snapshot = await getDocs(collection(db, 'reviews'))
+    const aggregates = {}
+    
+    // DB의 모든 리뷰를 돌면서 공원별(parkId)로 별점 합계와 리뷰 개수 누적
+    snapshot.forEach(doc => {
+      const data = doc.data()
+      const pid = data.parkId
+      if (!aggregates[pid]) {
+        aggregates[pid] = { sum: 0, count: 0 }
+      }
+      aggregates[pid].sum += data.rating
+      aggregates[pid].count += 1
+    })
+
+    // 계산된 진짜 별점을 기존 공원 데이터에 덮어쓰기
+    return parksData.map(park => {
+      const agg = aggregates[park.id]
+      if (agg) {
+        return {
+          ...park,
+          reviewCount: agg.count,
+          rating: (agg.sum / agg.count).toFixed(1)
+        }
+      }
+      // 리뷰가 아예 없는 공원은 0으로 초기화
+      return { ...park, reviewCount: 0, rating: '0.0' }
+    })
+  } catch (error) {
+    console.error("리뷰 데이터 병합 에러:", error)
+    return parksData // 에러 나면 그냥 원래 데이터 반환
+  }
+}
+
 function App() {
   const { t, i18n } = useTranslation()
   const [parks, setParks] = useState(initialParks)
@@ -35,12 +74,10 @@ function App() {
   const [userLocation, setUserLocation] = useState({ lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' })
   const [currentFireRisk, setCurrentFireRisk] = useState({ riskLevel: 'moderate', rawDesc: 'Loading...', updatedAt: '' })
 
-  // 🌟 로그인 및 사용자 프로필 상태 관리
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [userProfile, setUserProfile] = useState(null)
 
-  // 🌟 구글 로그인 팝업 호출 및 토큰으로 유저 정보(이름, 프사) 가져오기
   const handleGoogleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {
@@ -48,7 +85,7 @@ function App() {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         })
         const data = await res.json()
-        setUserProfile(data) // 가져온 구글 계정 정보 저장
+        setUserProfile(data)
         setIsLoggedIn(true)
       } catch (err) {
         console.error("Failed to fetch user info", err)
@@ -57,7 +94,6 @@ function App() {
     onError: (error) => console.error('Login Failed:', error)
   })
 
-  // 🌟 로그아웃 처리
   const handleLogout = () => {
     setIsLoggedIn(false)
     setUserProfile(null)
@@ -105,6 +141,15 @@ function App() {
 
       let currentPos = { lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' }
 
+      // 🌟 공원 데이터를 부르고 + Firebase 리뷰와 결합하는 통합 함수
+      const loadParksWithReviews = async (riskLevel, pos) => {
+        const apiParks = await fetchVancouverParks(riskLevel, pos)
+        if (apiParks) {
+          const mergedParks = await fetchAndMergeReviews(apiParks)
+          setParks(mergedParks)
+        }
+      }
+
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
@@ -120,20 +165,16 @@ function App() {
               label: isOutsideVancouver ? `Real GPS (${distFromVanc.toLocaleString()}km)` : 'Near Vancouver'
             }
             setUserLocation(currentPos)
-
-            const apiParks = await fetchVancouverParks(fireData.riskLevel, currentPos)
-            if (apiParks) setParks(apiParks)
+            await loadParksWithReviews(fireData.riskLevel, currentPos)
           },
           async (err) => {
             console.warn("GPS 거부 또는 대기 -> 기본 밴쿠버 다운타운 좌표 적용", err)
-            const apiParks = await fetchVancouverParks(fireData.riskLevel, currentPos)
-            if (apiParks) setParks(apiParks)
+            await loadParksWithReviews(fireData.riskLevel, currentPos)
           },
           { enableHighAccuracy: true, timeout: 8000 }
         )
       } else {
-        const apiParks = await fetchVancouverParks(fireData.riskLevel, currentPos)
-        if (apiParks) setParks(apiParks)
+        await loadParksWithReviews(fireData.riskLevel, currentPos)
       }
     }
 
@@ -214,7 +255,11 @@ function App() {
     const downtownPos = { lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' }
     setUserLocation(downtownPos)
     const apiParks = await fetchVancouverParks(currentFireRisk.riskLevel, downtownPos)
-    if (apiParks) setParks(apiParks)
+    if (apiParks) {
+      // 🌟 내 위치 초기화 시에도 파이어베이스 연동 데이터로 병합
+      const mergedParks = await fetchAndMergeReviews(apiParks)
+      setParks(mergedParks)
+    }
   }
 
   return (
@@ -311,7 +356,6 @@ function App() {
               {t('nav.addPark')}
             </button>
 
-            {/* 🌟 로그인/프로필 드롭다운 영역 */}
             <div 
               className="relative"
               onMouseEnter={() => isLoggedIn && setIsDropdownOpen(true)}
@@ -374,7 +418,6 @@ function App() {
         </div>
       </nav>
 
-      {/* Main Content */}
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>

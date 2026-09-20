@@ -8,13 +8,10 @@ export const initialParks = [
     bbq: "charcoal",
     risk: "low",
     facilities: ["restroom", "parking", "picnic", "water"],
-    rating: 4.7,
-    reviewCount: 128,
+    rating: 0,
+    reviewCount: 0,
     description: "Vancouver's largest urban park with beautiful trails and ocean views.",
-    reviews: [
-      { user: "Maria K.", text: "Best BBQ spot in the city! Very clean and spacious.", stars: 5, time: "2 days ago" },
-      { user: "Dmitry L.", text: "Great for big groups. Arrive early on weekends.", stars: 4, time: "1 week ago" }
-    ]
+    reviews: []
   },
   {
     id: 2,
@@ -25,12 +22,10 @@ export const initialParks = [
     bbq: "charcoal",
     risk: "moderate",
     facilities: ["restroom", "parking", "picnic"],
-    rating: 4.3,
-    reviewCount: 87,
+    rating: 0,
+    reviewCount: 0,
     description: "One of Vancouver's most beautiful parks with amazing city views.",
-    reviews: [
-      { user: "Jio Kim", text: "Stunning views. Charcoal is allowed here. We have fun here with my Honey", stars: 5, time: "3 days ago" }
-    ]
+    reviews: []
   },
   {
     id: 3,
@@ -41,8 +36,8 @@ export const initialParks = [
     bbq: "gas-only",
     risk: "low",
     facilities: ["restroom", "parking"],
-    rating: 4.1,
-    reviewCount: 56,
+    rating: 0,
+    reviewCount: 0,
     description: "Beautiful botanical garden. Gas grills only.",
     reviews: []
   },
@@ -55,12 +50,10 @@ export const initialParks = [
     bbq: "charcoal",
     risk: "moderate",
     facilities: ["restroom", "parking", "picnic", "water"],
-    rating: 4.6,
-    reviewCount: 94,
+    rating: 0,
+    reviewCount: 0,
     description: "Beach park with mountain views. Perfect for sunset BBQs.",
-    reviews: [
-      { user: "Igor M.", text: "Beach + BBQ = perfect day. Plenty of space for large groups.", stars: 5, time: "5 days ago" }
-    ]
+    reviews: []
   },
   {
     id: 5,
@@ -71,8 +64,8 @@ export const initialParks = [
     bbq: "gas-only",
     risk: "low",
     facilities: ["restroom", "parking", "picnic"],
-    rating: 4.4,
-    reviewCount: 112,
+    rating: 0,
+    reviewCount: 0,
     description: "Popular beach in Kitsilano. Gas grills only.",
     reviews: []
   },
@@ -85,12 +78,10 @@ export const initialParks = [
     bbq: "none",
     risk: "high",
     facilities: ["restroom", "parking"],
-    rating: 3.9,
-    reviewCount: 203,
+    rating: 0,
+    reviewCount: 0,
     description: "Central Vancouver beach. Currently no BBQs allowed due to high fire risk.",
-    reviews: [
-      { user: "Svetlana M.", text: "Beautiful but no BBQ allowed right now. Too bad.", stars: 3, time: "yesterday" }
-    ]
+    reviews: []
   },
   {
     id: 7,
@@ -101,8 +92,8 @@ export const initialParks = [
     bbq: "charcoal",
     risk: "low",
     facilities: ["restroom", "parking", "picnic", "water"],
-    rating: 4.8,
-    reviewCount: 67,
+    rating: 0,
+    reviewCount: 0,
     description: "Huge forest park. Ideal for nature lovers.",
     reviews: []
   },
@@ -115,8 +106,8 @@ export const initialParks = [
     bbq: "charcoal",
     risk: "moderate",
     facilities: ["restroom", "parking", "picnic"],
-    rating: 4.2,
-    reviewCount: 41,
+    rating: 0,
+    reviewCount: 0,
     description: "Park with city and mountain views. Lots of space for BBQ.",
     reviews: []
   }
