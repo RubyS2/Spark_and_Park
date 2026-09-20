@@ -35,7 +35,7 @@ function ParkCard({ park, onClick }) {
 
       <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center justify-between">
         <span>📍 {park.distance} {t('card.fromLocation')}</span>
-        <span className="text-amber-500 font-medium">★ {park.rating || '4.0'}</span>
+        <span className="text-amber-500 font-medium">★ {park.rating || '0.0'}</span>
       </div>
 
       <div className="mt-2.5 pt-2 border-t border-zinc-200 dark:border-zinc-800/60 flex items-center justify-between text-[11px]">
