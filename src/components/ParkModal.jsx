@@ -1,14 +1,57 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { db } from '../firebase' // Firebase DB 연동
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore'
 
-export default function ParkModal({ park, onClose, onUpdate }) {
+// 💡 주의: App.jsx에서 userProfile을 넘겨주도록 추가했으므로 프롭스에 추가되었습니다!
+export default function ParkModal({ park, onClose, onUpdate, userProfile }) {
   const { t } = useTranslation()
   const [showRating, setShowRating] = useState(false)
   const [ratingValue, setRatingValue] = useState(5)
   const [reviewText, setReviewText] = useState('')
   const [hoverRating, setHoverRating] = useState(0)
+  
+  // 🌟 Firebase 연동을 위한 새로운 상태(State)
+  const [reviews, setReviews] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  // 🌟 모달이 열릴 때 Firebase에서 리뷰 데이터 불러오기
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!park) return
+      setIsLoading(true)
+      try {
+        const q = query(
+          collection(db, 'reviews'),
+          where('parkId', '==', park.id)
+        )
+        const querySnapshot = await getDocs(q)
+        
+        const fetchedReviews = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        // 최신순 정렬
+        fetchedReviews.sort((a, b) => b.createdAt - a.createdAt)
+        
+        setReviews(fetchedReviews)
+      } catch (error) {
+        console.error("리뷰 불러오기 에러:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchReviews()
+  }, [park])
 
   if (!park) return null
+
+  // 🌟 실제 리뷰 데이터 기반으로 실시간 별점/리뷰수 계산
+  const reviewCount = reviews.length
+  const averageRating = reviewCount > 0 
+    ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1)
+    : (park.rating || '4.0')
 
   const getRiskInfo = (risk) => {
     if (risk === 'low') {
@@ -34,28 +77,46 @@ export default function ParkModal({ park, onClose, onUpdate }) {
 
   const riskInfo = getRiskInfo(park.risk)
 
-  const handleAddReview = () => {
+  // 🌟 Firebase에 진짜 리뷰 저장하기
+  const handleAddReview = async () => {
+    if (!userProfile) {
+      alert("리뷰를 작성하려면 오른쪽 위 버튼으로 로그인해 주세요!")
+      return
+    }
     if (!reviewText.trim() && ratingValue === 0) return
 
-    const newReview = {
-      id: Date.now(),
-      user: "You",
-      text: reviewText.trim() || "Great spot!",
-      stars: ratingValue,
-      time: "just now"
+    const newReviewData = {
+      parkId: park.id,
+      userName: userProfile.name,
+      userPhoto: userProfile.picture,
+      rating: ratingValue,
+      content: reviewText.trim() || "Great spot!",
+      createdAt: Date.now()
     }
 
-    const updatedPark = {
-      ...park,
-      reviews: [newReview, ...(park.reviews || [])],
-      reviewCount: (park.reviewCount || 0) + 1,
-      rating: (((parseFloat(park.rating) || 4) * (park.reviewCount || 0) + ratingValue) / ((park.reviewCount || 0) + 1)).toFixed(1)
-    }
+    try {
+      // Firebase DB 'reviews' 폴더에 저장
+      const docRef = await addDoc(collection(db, 'reviews'), newReviewData)
+      
+      // 저장 성공 시 화면 즉시 업데이트
+      const addedReview = { id: docRef.id, ...newReviewData }
+      setReviews([addedReview, ...reviews])
+      
+      // 모달 바깥의 지도/리스트도 업데이트 되도록 onUpdate 호출
+      const updatedPark = {
+        ...park,
+        reviewCount: reviewCount + 1,
+        rating: (((parseFloat(averageRating) * reviewCount) + ratingValue) / (reviewCount + 1)).toFixed(1)
+      }
+      onUpdate(updatedPark)
 
-    onUpdate(updatedPark)
-    setShowRating(false)
-    setReviewText('')
-    setRatingValue(5)
+      setShowRating(false)
+      setReviewText('')
+      setRatingValue(5)
+    } catch (error) {
+      console.error("리뷰 저장 에러:", error)
+      alert("리뷰 저장 중 문제가 발생했습니다.")
+    }
   }
 
   const getDirections = () => {
@@ -73,7 +134,6 @@ export default function ParkModal({ park, onClose, onUpdate }) {
     }
   }
 
-  // 시설 명칭 다국어 변환 매퍼
   const getFacilityName = (fac) => {
     switch (fac) {
       case 'restroom': return t('modal.facWashrooms')
@@ -96,7 +156,6 @@ export default function ParkModal({ park, onClose, onUpdate }) {
         className="modal bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 w-full max-w-3xl max-h-[88vh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl overflow-hidden flex flex-col shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-200"
         onClick={e => e.stopPropagation()}
       >
-        {/* Header: 모바일 스크롤 시에도 최상단에 고정 */}
         <div className="sticky top-0 z-20 px-5 sm:px-8 py-4 sm:py-6 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center bg-white/95 dark:bg-zinc-950/95 backdrop-blur">
           <div className="pr-4">
             <h2 className="text-xl sm:text-3xl lg:text-4xl font-semibold tracking-tight text-zinc-900 dark:text-white truncate max-w-[240px] sm:max-w-md">
@@ -106,8 +165,6 @@ export default function ParkModal({ park, onClose, onUpdate }) {
               📍 {park.distance} {t('modal.fromLocation')}
             </p>
           </div>
-          
-          {/* 모바일/PC 공용 대형 터치 닫기 버튼 */}
           <button 
             onClick={onClose} 
             className="w-10 h-10 -mr-2 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white flex items-center justify-center text-2xl active:scale-90 transition-all cursor-pointer"
@@ -117,11 +174,8 @@ export default function ParkModal({ park, onClose, onUpdate }) {
           </button>
         </div>
 
-        {/* Content Body: 세로 스크롤 영역 */}
         <div className="overflow-y-auto p-5 sm:p-8 grid grid-cols-1 md:grid-cols-5 gap-6 sm:gap-8 flex-1 text-zinc-800 dark:text-zinc-200">
-          {/* Left: Rules + Conditions + Facilities */}
           <div className="md:col-span-3 space-y-6 sm:space-y-8">
-            {/* BBQ Rules */}
             <div>
               <div className="uppercase tracking-[1px] text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2.5 sm:mb-3">
                 {t('modal.bbqRules')}
@@ -155,7 +209,6 @@ export default function ParkModal({ park, onClose, onUpdate }) {
               </div>
             </div>
 
-            {/* Current Conditions */}
             <div>
               <div className="uppercase tracking-[1px] text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2.5 sm:mb-3">
                 {t('modal.currentConditions')}
@@ -173,7 +226,6 @@ export default function ParkModal({ park, onClose, onUpdate }) {
               </div>
             </div>
 
-            {/* Facilities */}
             <div>
               <div className="uppercase tracking-[1px] text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-2.5 sm:mb-3">
                 {t('modal.facilitiesTitle')}
@@ -199,18 +251,16 @@ export default function ParkModal({ park, onClose, onUpdate }) {
             </div>
           </div>
 
-          {/* Right: Rating + Reviews */}
           <div className="md:col-span-2 space-y-5 sm:space-y-6">
-            {/* Rating Summary */}
             <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6">
               <div className="flex justify-between items-start">
                 <div>
                   <div className="text-[10px] sm:text-xs text-zinc-500">{t('modal.overallRating')}</div>
-                  <div className="text-4xl sm:text-6xl font-semibold tabular-nums mt-1 text-zinc-900 dark:text-white">{park.rating || '4.0'}</div>
-                  <div className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{t('modal.basedOnReviews', { count: park.reviewCount || 0 })}</div>
+                  <div className="text-4xl sm:text-6xl font-semibold tabular-nums mt-1 text-zinc-900 dark:text-white">{averageRating}</div>
+                  <div className="text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{t('modal.basedOnReviews', { count: reviewCount })}</div>
                 </div>
                 <div className="text-2xl sm:text-4xl text-amber-400">
-                  {'★'.repeat(Math.min(5, Math.floor(park.rating || 4)))}
+                  {'★'.repeat(Math.min(5, Math.floor(parseFloat(averageRating))))}
                 </div>
               </div>
 
@@ -222,7 +272,6 @@ export default function ParkModal({ park, onClose, onUpdate }) {
               </button>
             </div>
 
-            {/* Community Notes */}
             <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 flex flex-col h-[260px] sm:h-[280px]">
               <div className="flex justify-between items-center mb-3">
                 <div className="uppercase tracking-[1px] text-xs font-semibold text-zinc-500 dark:text-zinc-400">{t('modal.communityNotes')}</div>
@@ -234,16 +283,32 @@ export default function ParkModal({ park, onClose, onUpdate }) {
                 </button>
               </div>
 
+              {/* 🌟 Firebase에서 가져온 실제 리뷰 목록 뿌려주기 */}
               <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs sm:text-sm">
-                {park.reviews && park.reviews.length > 0 ? (
-                  park.reviews.map((review, idx) => (
-                    <div key={idx} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3.5 shadow-sm">
+                {isLoading ? (
+                  <div className="h-full flex items-center justify-center text-zinc-500 text-xs animate-pulse">
+                    로딩 중...
+                  </div>
+                ) : reviews.length > 0 ? (
+                  reviews.map((review) => (
+                    <div key={review.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3.5 shadow-sm">
                       <div className="flex justify-between items-center">
-                        <span className="font-medium text-zinc-800 dark:text-zinc-200">{review.user || review.author}</span>
-                        <span className="text-amber-400 text-xs">{'★'.repeat(review.stars || review.rating || 5)}</span>
+                        <div className="flex items-center gap-2">
+                          {review.userPhoto ? (
+                            <img src={review.userPhoto} alt="profile" className="w-5 h-5 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-5 h-5 bg-emerald-500 rounded-full text-white flex items-center justify-center text-[10px] font-bold">
+                              {review.userName ? review.userName.charAt(0) : 'U'}
+                            </div>
+                          )}
+                          <span className="font-medium text-zinc-800 dark:text-zinc-200">{review.userName || '익명'}</span>
+                        </div>
+                        <span className="text-amber-400 text-xs">{'★'.repeat(review.rating || 5)}</span>
                       </div>
-                      <p className="mt-1.5 text-zinc-600 dark:text-zinc-300 text-xs leading-snug">{review.text}</p>
-                      <div className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-2">{review.time || review.date}</div>
+                      <p className="mt-1.5 text-zinc-600 dark:text-zinc-300 text-xs leading-snug whitespace-pre-wrap">{review.content}</p>
+                      <div className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-2">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -256,7 +321,6 @@ export default function ParkModal({ park, onClose, onUpdate }) {
           </div>
         </div>
 
-        {/* Footer Actions */}
         <div className="px-5 sm:px-8 py-3.5 sm:py-5 border-t border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur flex gap-3 sm:gap-x-4">
           <button 
             onClick={getDirections}
@@ -273,7 +337,6 @@ export default function ParkModal({ park, onClose, onUpdate }) {
         </div>
       </div>
 
-      {/* Rating Popup Modal */}
       {showRating && (
         <div className="fixed inset-0 bg-black/90 z-[110] flex items-center justify-center p-4" onClick={() => setShowRating(false)}>
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>

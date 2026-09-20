@@ -538,7 +538,8 @@ function App() {
         <ParkModal 
           park={selectedPark} 
           onClose={closeModal} 
-          onUpdate={updatePark} 
+          onUpdate={updatePark}
+          userProfile={userProfile} 
         />
       )}
 
