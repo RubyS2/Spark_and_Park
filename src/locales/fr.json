@@ -100,7 +100,8 @@
     "loadingReviews": "Chargement des avis...",
     "anonymous": "Anonyme",
     "saved": "Enregistré",
-    "saveFavorites": "Ajouter aux favoris"
+    "saveFavorites": "Ajouter aux favoris",
+    "translate": "Traduire"
   },
   "footer": {
     "copyright": "Spark & Park — Projet de fin d'études 2026 • Créé avec React + Firebase par Jisol Kim"

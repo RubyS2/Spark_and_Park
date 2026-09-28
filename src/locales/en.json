@@ -100,7 +100,8 @@
     "loadingReviews": "Loading reviews...",
     "anonymous": "Anonymous",
     "saved": "Saved",
-    "saveFavorites": "Save to Favorites"
+    "saveFavorites": "Save to Favorites",
+    "translate": "Translate"
   },
   "footer": {
     "copyright": "Spark & Park — 2026 Graduation Project • Built with React + Firebase by Jisol Kim"

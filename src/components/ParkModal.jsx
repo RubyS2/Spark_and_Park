@@ -110,7 +110,16 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
       alert(t('modal.reviewError', '리뷰 저장 중 문제가 발생했습니다.'))
     }
   }
-
+// 🌟 리뷰 구글 번역기 연결 함수
+  const handleTranslate = (text) => {
+    // 사용자의 브라우저/시스템 1순위 언어 가져오기 (예: 'ko-KR' -> 'ko')
+    const systemLang = (navigator.languages && navigator.languages[0]) || navigator.language || 'en'
+    const targetLang = systemLang.split('-')[0] // 앞의 언어 코드만 추출
+    
+    // 구글 번역기 URL에 리뷰 텍스트와 도착 언어를 섞어서 새 창 띄우기
+    const url = `https://translate.google.com/?sl=auto&tl=${targetLang}&text=${encodeURIComponent(text)}&op=translate`
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
   const getDirections = () => {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${park.lat},${park.lng}`, '_blank')
   }
@@ -288,9 +297,19 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                         <span className="text-amber-400 text-xs">{'★'.repeat(review.rating || 5)}</span>
                       </div>
                       <p className="mt-1.5 text-zinc-600 dark:text-zinc-300 text-xs leading-snug whitespace-pre-wrap">{review.content}</p>
-                      <div className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-2">
+                      {/* 🌟 날짜와 번역 버튼을 나란히 배치 */}
+                      <div className="flex justify-between items-center mt-2">
+                        <div className="text-[10px] text-zinc-400 dark:text-zinc-500">
                         {new Date(review.createdAt).toLocaleDateString()}
                       </div>
+    
+                      <button 
+                        onClick={() => handleTranslate(review.content)}
+                        className="text-[10px] flex items-center gap-x-1 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-900"
+                      >
+                        <span>🌐</span> {t('modal.translate', '번역하기')}
+                      </button>
+                    </div>
                     </div>
                   ))
                 ) : (

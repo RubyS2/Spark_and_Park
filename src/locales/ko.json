@@ -100,7 +100,8 @@
     "loadingReviews": "리뷰 불러오는 중...",
     "anonymous": "익명",
     "saved": "저장됨",
-    "saveFavorites": "즐겨찾기 저장"
+    "saveFavorites": "즐겨찾기 저장",
+    "translate": "번역하기"
   },
   "footer": {
     "copyright": "Spark & Park — 2026 졸업 작품 • React + Firebase 제작: Jisol Kim"

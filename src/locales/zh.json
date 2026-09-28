@@ -100,7 +100,8 @@
     "submitReview": "提交評價",
     "close": "關閉",
     "saved": "已保存",
-    "saveFavorites": "保存到收藏夹"
+    "saveFavorites": "保存到收藏夹",
+    "translate": "翻译"
   },
   "footer": {
     "copyright": "Spark & Park — 2026 毕业项目 • 由 Jisol Kim 使用 React + Firebase 制作"
