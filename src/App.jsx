@@ -78,7 +78,7 @@ function App() {
   })
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false) // 모달 제어용 상태
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false) 
 
   const [viewMode, setViewMode] = useState('all') 
   const [favoriteParkIds, setFavoriteParkIds] = useState([])
@@ -384,7 +384,6 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 pb-12">
           
           <div className="lg:col-span-3">
-            {/* 🌟 모바일 필터 열기 버튼 (바텀 시트 팝업 호출) */}
             <button
               onClick={() => setIsMobileFilterOpen(true)}
               className="w-full lg:hidden mb-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-4 py-3.5 rounded-2xl flex justify-between items-center shadow-sm text-sm font-semibold text-zinc-800 dark:text-zinc-200 active:scale-[0.99] transition-transform"
@@ -396,12 +395,10 @@ function App() {
               <span className="text-zinc-400 text-xs bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-xl">설정하기 ➔</span>
             </button>
 
-            {/* 🌟 데스크톱 전용 필터 (PC 화면에서는 항상 표출됨) */}
             <div className="hidden lg:block">
               <Filters filters={filters} onChange={handleFilterChange} onReset={resetFilters} />
             </div>
 
-            {/* 🌟 모바일 전용 바텀 시트 (Bottom Sheet) 모달 필터 */}
             {isMobileFilterOpen && (
               <div 
                 className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex justify-center items-end lg:hidden transition-all"
@@ -411,7 +408,6 @@ function App() {
                   className="bg-white dark:bg-zinc-950 w-full max-h-[85vh] overflow-y-auto rounded-t-3xl p-5 sm:p-6 animate-in slide-in-from-bottom-full duration-300 shadow-2xl flex flex-col"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* 바텀 시트 헤더 */}
                   <div className="flex justify-between items-center mb-5 pb-4 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
                     <h3 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-x-2">
                       <span>🎛️</span> {t('filters.title', '필터 설정')}
@@ -424,12 +420,10 @@ function App() {
                     </button>
                   </div>
                   
-                  {/* 필터 본문 영역 */}
                   <div className="pb-4 flex-1">
                     <Filters filters={filters} onChange={handleFilterChange} onReset={resetFilters} />
                   </div>
 
-                  {/* 🌟 고정된 필터 적용 버튼 (결과 개수 표시) */}
                   <div className="sticky bottom-0 pt-4 pb-2 bg-white dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800/50 shrink-0">
                     <button 
                       onClick={() => setIsMobileFilterOpen(false)}
@@ -453,14 +447,43 @@ function App() {
                     <Popup><div className="font-bold text-blue-600">{t('popup.youAreHere')}</div></Popup>
                   </Marker>
                 )}
+                {/* 🌟 지도 핀 디자인 완벽하게 리뉴얼! (에어비앤비 스타일 동그라미 뱃지) */}
                 {filteredParks.filter(park => park && Number.isFinite(park.lat) && Number.isFinite(park.lng)).map(park => {
-                    let iconColor = '#ef4444'; let emoji = '🚫'
-                    if (park.bbq === 'charcoal') { iconColor = '#22c55e'; emoji = '🔥' }
-                    else if (park.bbq === 'gas-only') { iconColor = '#eab308'; emoji = '⛽' }
+                    let bgColor = '#ef4444'; // 기본값 (빨강)
+                    let content = '<span style="color:white; font-size:16px; font-weight:900;">✕</span>'; // 불가 표시 (흰색 X)
+                    let shadowColor = 'rgba(239, 68, 68, 0.4)';
+                    
+                    if (park.bbq === 'charcoal') { 
+                      bgColor = '#10b981'; // 초록
+                      content = '🔥'; 
+                      shadowColor = 'rgba(16, 185, 129, 0.4)'; 
+                    } else if (park.bbq === 'gas-only') { 
+                      bgColor = '#f59e0b'; // 노랑
+                      content = '⛽'; 
+                      shadowColor = 'rgba(245, 158, 11, 0.4)'; 
+                    }
+
                     const customIcon = L.divIcon({
                       className: 'custom-marker',
-                      html: `<div style="color: ${iconColor}; font-size: 16px; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">${emoji}</div>`,
-                      iconSize: [32, 32], iconAnchor: [16, 16]
+                      html: `
+                        <div style="
+                          background-color: ${bgColor};
+                          width: 30px;
+                          height: 30px;
+                          border-radius: 50%;
+                          border: 2.5px solid white;
+                          box-shadow: 0 4px 8px ${shadowColor}, 0 1px 3px rgba(0,0,0,0.1);
+                          display: flex;
+                          align-items: center;
+                          justify-content: center;
+                          font-size: 15px;
+                          transition: transform 0.2s;
+                        ">
+                          ${content}
+                        </div>
+                      `,
+                      iconSize: [30, 30],
+                      iconAnchor: [15, 15]
                     })
                     return (
                       <Marker key={park.id} position={[park.lat, park.lng]} icon={customIcon} eventHandlers={{ click: () => handleParkClick(park) }}>
