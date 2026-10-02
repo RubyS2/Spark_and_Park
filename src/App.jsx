@@ -390,7 +390,7 @@ function App() {
               className="w-full lg:hidden mb-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-4 py-3.5 rounded-2xl flex justify-between items-center shadow-sm text-sm font-semibold text-zinc-800 dark:text-zinc-200 active:scale-[0.99] transition-transform"
             >
               <div className="flex items-center gap-x-2.5">
-                <span className="text-lg bg-zinc-100 dark:bg-zinc-800 w-8 h-8 flex items-center justify-center rounded-lg">🎛️</span>
+                <span className="text-lg bg-zinc-100 dark:bg-zinc-800 w-8 h-8 flex items-center justify-center rounded-lg">⚙️</span>
                 {t('filters.title', '필터 설정')}
               </div>
               <span className="text-zinc-400 text-xs bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-xl">설정하기 ➔</span>
