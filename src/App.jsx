@@ -131,7 +131,7 @@ function App() {
       await setDoc(doc(db, 'userFavorites', userProfile.sub), { parks: newFavs })
     } catch (error) {
       console.error("즐겨찾기 저장 에러:", error)
-      alert("즐겨찾기 업데이트 중 오류가 발생했습니다.")
+      alert(t('nav.favUpdateError'))
     }
   }
 
@@ -351,7 +351,7 @@ function App() {
                 >
                   <i className="fa-brands fa-google text-red-500 text-[10px] sm:text-sm"></i>
                   <span className="hidden sm:inline">{t('nav.signIn', '로그인')}</span>
-                  <span className="sm:hidden">Login</span>
+                  <span className="sm:hidden">{t('nav.signIn')}</span>
                 </button>
               ) : (
                 <button
@@ -451,7 +451,7 @@ function App() {
             </div>
             <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl sm:rounded-2xl flex items-center gap-x-1.5 shadow-sm">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span className="text-zinc-800 dark:text-zinc-200 font-medium">{filteredParks.length} Parks</span>
+              <span className="text-zinc-800 dark:text-zinc-200 font-medium">{t('hero.parksCount', { count: filteredParks.length })}</span>
             </div>
           </div>
         </div>
@@ -527,7 +527,7 @@ function App() {
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
                 className="text-xs text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1.5 rounded-lg"
               >
-                맨위로 ↑
+                {t('list.top')}
               </button>
             </div>
 

@@ -9,7 +9,8 @@
     "favAlert": "Favorites page is coming soon.",
     "addParkPrompt": "Enter new park name:",
     "showAll": "Show all parks",
-    "myReviews": "My Reviews"
+    "myReviews": "My Reviews",
+    "favUpdateError": "An error occurred while updating favorites."
   },
   "hero": {
     "title": "Find the perfect spot for BBQ",
@@ -104,7 +105,9 @@
     "translate": "Translate",
     "hideTranslate": "Hide Translation",
     "translating": "Translating...",
-    "translateError": "An error occurred during translation."
+    "translateError": "An error occurred during translation.",
+    "translated": "Translated",
+    "defaultReview": "Great spot!"
   },
   "footer": {
     "copyright": "Spark & Park — 2026 Graduation Project • Built with React + Firebase by Jisol Kim"

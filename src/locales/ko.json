@@ -9,7 +9,8 @@
     "favAlert": "즐겨찾기 페이지는 준비 중입니다.",
     "addParkPrompt": "새로운 공원 이름을 입력하세요:",
     "showAll": "모든 공원 보기",
-    "myReviews": "나의 리뷰"
+    "myReviews": "나의 리뷰",
+    "favUpdateError": "즐겨찾기 업데이트 중 오류가 발생했습니다."
   },
   "hero": {
     "title": "완벽한 밴쿠버 BBQ 공원 찾기",
@@ -104,7 +105,9 @@
     "translate": "번역하기",
     "hideTranslate": "번역 닫기",
     "translating": "번역 중...",
-    "translateError": "번역 중 오류가 발생했습니다."
+    "translateError": "번역 중 오류가 발생했습니다.",
+    "translated": "번역됨",
+    "defaultReview": "정말 멋진 곳이네요!"
   },
   "footer": {
     "copyright": "Spark & Park — 2026 졸업 작품 • React + Firebase 제작: Jisol Kim"

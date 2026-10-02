@@ -4,7 +4,7 @@ import { db } from '../firebase'
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore'
 
 export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavorite, onToggleFavorite }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [showRating, setShowRating] = useState(false)
   const [ratingValue, setRatingValue] = useState(5)
   const [reviewText, setReviewText] = useState('')
@@ -97,7 +97,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
       userName: userProfile.name,
       userPhoto: userProfile.picture,
       rating: ratingValue,
-      content: reviewText.trim() || "Great spot!",
+      content: reviewText.trim() || t('modal.defaultReview'),
       createdAt: Date.now()
     }
 
@@ -350,7 +350,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                       {translatedReviews[review.id] && (
                         <div className="mt-3 p-3 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-xl relative transition-all">
                           <div className="flex items-center gap-x-1.5 mb-1.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                            <i className="fa-brands fa-google"></i> Translated
+                            <i className="fa-brands fa-google"></i> {t('modal.translated')}
                           </div>
                           <p className="text-zinc-700 dark:text-zinc-300 text-xs leading-relaxed whitespace-pre-wrap break-words">
                             {translatedReviews[review.id]}
@@ -361,7 +361,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                       {/* 🌟 번역 버튼 & 날짜 영역 (flex-wrap과 shrink-0으로 반응형 대응) */}
                       <div className="flex flex-wrap justify-between items-end mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/50 gap-2">
                         <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
-                          {new Date(review.createdAt).toLocaleDateString()}
+                          {new Date(review.createdAt).toLocaleDateString(i18n.language)}
                         </div>
                         
                         <button 

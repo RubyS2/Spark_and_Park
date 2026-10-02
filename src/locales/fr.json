@@ -9,7 +9,8 @@
     "favAlert": "La page des favoris sera bientôt disponible.",
     "addParkPrompt": "Entrez le nom du nouveau parc :",
     "showAll": "Afficher tous les parcs",
-    "myReviews": "Mes avis"
+    "myReviews": "Mes avis",
+    "favUpdateError": "Une erreur s'est produite lors de la mise à jour des favoris."
   },
   "hero": {
     "title": "Trouvez l'endroit idéal pour un barbecue",
@@ -104,7 +105,9 @@
     "translate": "Traduire",
     "hideTranslate": "Masquer",
     "translating": "Traduction...",
-    "translateError": "Erreur de traduction."
+    "translateError": "Erreur de traduction.",
+    "translated": "Traduit",
+    "defaultReview": "Super endroit !"
   },
   "footer": {
     "copyright": "Spark & Park — Projet de fin d'études 2026 • Créé avec React + Firebase par Jisol Kim"

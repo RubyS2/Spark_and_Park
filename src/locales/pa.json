@@ -9,7 +9,8 @@
     "favAlert": "ਮਨਪਸੰਦ ਪੰਨਾ ਜਲਦੀ ਆ ਰਿਹਾ ਹੈ।",
     "addParkPrompt": "ਨਵੇਂ ਪਾਰਕ ਦਾ ਨਾਮ ਦਰਜ ਕਰੋ:",
     "showAll": "ਸਾਰੇ ਪਾਰਕ ਦਿਖਾਓ",
-    "myReviews": "ਮੇਰੀਆਂ ਸਮੀਖਿਆਵਾਂ"
+    "myReviews": "ਮੇਰੀਆਂ ਸਮੀਖਿਆਵਾਂ",
+    "favUpdateError": "ਮਨਪਸੰਦ ਅੱਪਡੇਟ ਕਰਨ ਦੌਰਾਨ ਇੱਕ ਗਲਤੀ ਆਈ।"
   },
   "hero": {
     "title": "BBQ ਲਈ ਵਧੀਆ ਪਾਰਕ ਲੱਭੋ",
@@ -104,7 +105,9 @@
     "translate": "ਅਨੁਵਾਦ ਕਰੋ",
     "hideTranslate": "ਅਨੁਵਾਦ ਲੁਕਾਓ",
     "translating": "ਅਨੁਵਾਦ ਹੋ ਰਿਹਾ ਹੈ...",
-    "translateError": "ਅਨੁਵਾਦ ਦੌਰਾਨ ਗਲਤੀ ਆਈ।"
+    "translateError": "ਅਨੁਵਾਦ ਦੌਰਾਨ ਗਲਤੀ ਆਈ।",
+    "translated": "ਅਨੁਵਾਦ ਕੀਤਾ",
+    "defaultReview": "ਵਧੀਆ ਜਗ੍ਹਾ!"
   },
   "footer": {
     "copyright": "ਸਪਾਰਕ ਐਂਡ ਪਾਰਕ — 2026 ਗ੍ਰੈਜੂਏਸ਼ਨ ਪ੍ਰੋਜੈਕਟ • ਜਿਸੋਲ ਕਿਮ ਦੁਆਰਾ React + Firebase ਨਾਲ ਬਣਾਇਆ ਗਿਆ"

@@ -9,7 +9,8 @@
     "favAlert": "收藏夹页面即将推出。",
     "addParkPrompt": "请输入新公园名称：",
     "showAll": "显示所有公园",
-    "myReviews": "我的评论"
+    "myReviews": "我的评论",
+    "favUpdateError": "更新收藏夹时出错。"
   },
   "hero": {
     "title": "尋找溫哥華最佳烤肉地點",
@@ -104,7 +105,9 @@
     "translate": "翻译",
     "hideTranslate": "隐藏翻译",
     "translating": "翻译中...",
-    "translateError": "翻译时出错。"
+    "translateError": "翻译时出错。",
+    "translated": "已翻译",
+    "defaultReview": "好地方！"
   },
   "footer": {
     "copyright": "Spark & Park — 2026 毕业项目 • 由 Jisol Kim 使用 React + Firebase 制作"
