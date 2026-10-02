@@ -20,9 +20,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
+// 내 위치 마커 (파란색 도트)
 const userLocationIcon = L.divIcon({
   className: 'user-marker',
-  html: `<div style="background-color: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px #3b82f6;"></div>`,
+  html: `<div style="background-color: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);"></div>`,
   iconSize: [16, 16],
   iconAnchor: [8, 8]
 })
@@ -447,44 +448,33 @@ function App() {
                     <Popup><div className="font-bold text-blue-600">{t('popup.youAreHere')}</div></Popup>
                   </Marker>
                 )}
-                {/* 🌟 지도 핀 디자인 완벽하게 리뉴얼! (에어비앤비 스타일 동그라미 뱃지) */}
+
+                {/* 🌟 100% SVG 기반 모던 미니멀리즘 핀 디자인 적용! */}
                 {filteredParks.filter(park => park && Number.isFinite(park.lat) && Number.isFinite(park.lng)).map(park => {
-                    let bgColor = '#ef4444'; // 기본값 (빨강)
-                    let content = '<span style="color:white; font-size:16px; font-weight:900;">✕</span>'; // 불가 표시 (흰색 X)
-                    let shadowColor = 'rgba(239, 68, 68, 0.4)';
+                    let pinColor = '#ef4444'; // 기본: 빨강 (금지)
                     
                     if (park.bbq === 'charcoal') { 
-                      bgColor = '#10b981'; // 초록
-                      content = '🔥'; 
-                      shadowColor = 'rgba(16, 185, 129, 0.4)'; 
+                      pinColor = '#10b981'; // 숯불 가능: 에메랄드
                     } else if (park.bbq === 'gas-only') { 
-                      bgColor = '#f59e0b'; // 노랑
-                      content = '⛽'; 
-                      shadowColor = 'rgba(245, 158, 11, 0.4)'; 
+                      pinColor = '#f59e0b'; // 가스 전용: 앰버(호박색)
                     }
 
                     const customIcon = L.divIcon({
-                      className: 'custom-marker',
+                      // Leaflet의 기본 하얀 네모 상자(leaflet-div-icon)를 제거하기 위한 커스텀 클래스
+                      className: 'custom-modern-pin', 
                       html: `
-                        <div style="
-                          background-color: ${bgColor};
-                          width: 30px;
-                          height: 30px;
-                          border-radius: 50%;
-                          border: 2.5px solid white;
-                          box-shadow: 0 4px 8px ${shadowColor}, 0 1px 3px rgba(0,0,0,0.1);
-                          display: flex;
-                          align-items: center;
-                          justify-content: center;
-                          font-size: 15px;
-                          transition: transform 0.2s;
-                        ">
-                          ${content}
+                        <div style="filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.25)); transition: transform 0.2s;">
+                          <svg width="26" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 0C5.373 0 0 5.253 0 11.733C0 20.533 12 36 12 36C12 36 24 20.533 24 11.733C24 5.253 18.627 0 12 0Z" fill="${pinColor}"/>
+                            <circle cx="12" cy="11.5" r="5" fill="white"/>
+                          </svg>
                         </div>
                       `,
-                      iconSize: [30, 30],
-                      iconAnchor: [15, 15]
+                      iconSize: [26, 36],
+                      // 핀의 뾰족한 끝 부분이 실제 좌표를 가리키도록 Anchor 설정 (가운데 아래)
+                      iconAnchor: [13, 36] 
                     })
+                    
                     return (
                       <Marker key={park.id} position={[park.lat, park.lng]} icon={customIcon} eventHandlers={{ click: () => handleParkClick(park) }}>
                         <Popup>
