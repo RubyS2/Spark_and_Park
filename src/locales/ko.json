@@ -20,7 +20,7 @@
     "liveSync": "BCWS 실시간 연동"
   },
   "filters": {
-    "title": "필터",
+    "title": "필터 설정",
     "reset": "전체 초기화",
     "bbqType": "바비큐 규정",
     "charcoal": "🔥 숯불 사용 가능",
@@ -33,7 +33,8 @@
     "wildfireRisk": "산불 위험 등급",
     "lowRisk": "● 안전 (Low)",
     "moderate": "● 주의 (Moderate)",
-    "highRisk": "● 위험 / 금지 (High)"
+    "highRisk": "● 위험 / 금지 (High)",
+    "openSettings": "세부사항"
   },
   "list": {
     "title": "가까운 공원 목록",

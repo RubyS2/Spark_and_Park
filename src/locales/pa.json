@@ -33,7 +33,8 @@
     "wildfireRisk": "ਅੱਗ ਦੇ ਖਤਰੇ ਦਾ ਪੱਧਰ",
     "lowRisk": "● ਘੱਟ ਖਤਰਾ",
     "moderate": "● ਦਰਮਿਆਨਾ ਖਤਰਾ",
-    "highRisk": "● ਉੱਚ / ਅਤਿ ਖਤਰਾ"
+    "highRisk": "● ਉੱਚ / ਅਤਿ ਖਤਰਾ",
+    "openSettings": "ਸੈਟਿੰਗਾਂ"
   },
   "list": {
     "title": "ਨੇੜਲੇ ਪਾਰਕ",

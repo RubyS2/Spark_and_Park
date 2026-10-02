@@ -20,7 +20,7 @@
     "liveSync": "BCWS 即時同步"
   },
   "filters": {
-    "title": "篩選條件",
+    "title": "筛选设置",
     "reset": "重設全部",
     "bbqType": "燒烤類型",
     "charcoal": "🔥 允許木炭",
@@ -33,7 +33,8 @@
     "wildfireRisk": "山火風險等級",
     "lowRisk": "● 低風險",
     "moderate": "● 中度風險",
-    "highRisk": "● 高度 / 極端風險"
+    "highRisk": "● 高度 / 極端風險",
+    "openSettings": "设置"
   },
   "list": {
     "title": "附近公園",

@@ -393,7 +393,9 @@ function App() {
                 <span className="text-lg bg-zinc-100 dark:bg-zinc-800 w-8 h-8 flex items-center justify-center rounded-lg">⚙️</span>
                 {t('filters.title', '필터 설정')}
               </div>
-              <span className="text-zinc-400 text-xs bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-xl">설정하기 ➔</span>
+              <span className="text-zinc-400 text-xs bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-xl">
+                {t('filters.openSettings', '설정하기')} ➔
+              </span>
             </button>
 
             <div className="hidden lg:block">

@@ -33,7 +33,8 @@
     "wildfireRisk": "Wildfire Risk Level",
     "lowRisk": "● Low Risk",
     "moderate": "● Moderate",
-    "highRisk": "● High / Extreme"
+    "highRisk": "● High / Extreme",
+    "openSettings": "Detail Settings"
   },
   "list": {
     "title": "Nearby Parks",

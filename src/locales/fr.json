@@ -33,7 +33,8 @@
     "wildfireRisk": "Niveau de risque d'incendie",
     "lowRisk": "● Risque faible",
     "moderate": "● Modéré",
-    "highRisk": "● Élevé / Extrême"
+    "highRisk": "● Élevé / Extrême",
+    "openSettings": "Paramètres"
   },
   "list": {
     "title": "Parcs à proximité",
