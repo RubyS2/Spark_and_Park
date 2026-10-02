@@ -101,7 +101,10 @@
     "anonymous": "ਗੁਮਨਾਮ",
     "saved": "ਸੁਰੱਖਿਅਤ ਕੀਤਾ",
     "saveFavorites": "ਮਨਪਸੰਦ ਵਿੱਚ ਸੁਰੱਖਿਅਤ ਕਰੋ",
-    "translate": "ਅਨੁਵਾਦ ਕਰੋ"
+    "translate": "ਅਨੁਵਾਦ ਕਰੋ",
+    "hideTranslate": "ਅਨੁਵਾਦ ਲੁਕਾਓ",
+    "translating": "ਅਨੁਵਾਦ ਹੋ ਰਿਹਾ ਹੈ...",
+    "translateError": "ਅਨੁਵਾਦ ਦੌਰਾਨ ਗਲਤੀ ਆਈ।"
   },
   "footer": {
     "copyright": "ਸਪਾਰਕ ਐਂਡ ਪਾਰਕ — 2026 ਗ੍ਰੈਜੂਏਸ਼ਨ ਪ੍ਰੋਜੈਕਟ • ਜਿਸੋਲ ਕਿਮ ਦੁਆਰਾ React + Firebase ਨਾਲ ਬਣਾਇਆ ਗਿਆ"

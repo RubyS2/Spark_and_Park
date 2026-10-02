@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { db } from '../firebase' 
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore'
 
-// 🌟 App.jsx에서 보내준 isFavorite과 onToggleFavorite 프롭스 추가
 export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavorite, onToggleFavorite }) {
   const { t } = useTranslation()
   const [showRating, setShowRating] = useState(false)
@@ -13,6 +12,8 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
   
   const [reviews, setReviews] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [translatedReviews, setTranslatedReviews] = useState({}) 
+  const [isTranslating, setIsTranslating] = useState({})
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -47,7 +48,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
   const reviewCount = reviews.length
   const averageRating = reviewCount > 0 
     ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1)
-    : '0.0' // 🌟 리뷰가 없을 때는 무조건 0.0으로 고정되도록 수정 완료!
+    : '0.0' 
 
   const getRiskInfo = (risk) => {
     if (risk === 'low') {
@@ -110,16 +111,40 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
       alert(t('modal.reviewError', '리뷰 저장 중 문제가 발생했습니다.'))
     }
   }
-// 🌟 리뷰 구글 번역기 연결 함수
-  const handleTranslate = (text) => {
-    // 사용자의 브라우저/시스템 1순위 언어 가져오기 (예: 'ko-KR' -> 'ko')
-    const systemLang = (navigator.languages && navigator.languages[0]) || navigator.language || 'en'
-    const targetLang = systemLang.split('-')[0] // 앞의 언어 코드만 추출
+
+  // 🌟 인라인 구글 번역 (무료 API)
+  const handleTranslate = async (reviewId, text) => {
+    // 이미 번역이 열려있다면 닫기
+    if (translatedReviews[reviewId]) {
+      setTranslatedReviews(prev => {
+        const newState = { ...prev }
+        delete newState[reviewId]
+        return newState
+      })
+      return
+    }
+
+    setIsTranslating(prev => ({ ...prev, [reviewId]: true }))
     
-    // 구글 번역기 URL에 리뷰 텍스트와 도착 언어를 섞어서 새 창 띄우기
-    const url = `https://translate.google.com/?sl=auto&tl=${targetLang}&text=${encodeURIComponent(text)}&op=translate`
-    window.open(url, '_blank', 'noopener,noreferrer')
+    try {
+      const systemLang = (navigator.languages && navigator.languages[0]) || navigator.language || 'en'
+      const targetLang = systemLang.split('-')[0] 
+      
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`
+      const res = await fetch(url)
+      const data = await res.json()
+      
+      const translatedText = data[0].map(item => item[0]).join('')
+      
+      setTranslatedReviews(prev => ({ ...prev, [reviewId]: translatedText }))
+    } catch (error) {
+      console.error("번역 에러:", error)
+      alert(t('modal.translateError', '번역 중 오류가 발생했습니다.'))
+    } finally {
+      setIsTranslating(prev => ({ ...prev, [reviewId]: false }))
+    }
   }
+
   const getDirections = () => {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${park.lat},${park.lng}`, '_blank')
   }
@@ -296,20 +321,43 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                         </div>
                         <span className="text-amber-400 text-xs">{'★'.repeat(review.rating || 5)}</span>
                       </div>
+                      
                       <p className="mt-1.5 text-zinc-600 dark:text-zinc-300 text-xs leading-snug whitespace-pre-wrap">{review.content}</p>
-                      {/* 🌟 날짜와 번역 버튼을 나란히 배치 */}
-                      <div className="flex justify-between items-center mt-2">
+                      
+                      {/* 🌟 번역 로딩 중 문구 */}
+                      {isTranslating[review.id] && (
+                        <div className="mt-2 p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl text-[11px] text-zinc-500 animate-pulse">
+                          {t('modal.translating', '번역 중...')}
+                        </div>
+                      )}
+
+                      {/* 🌟 번역 결과 표시 박스 */}
+                      {translatedReviews[review.id] && (
+                        <div className="mt-2 p-3 bg-blue-50/60 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-xl relative transition-all">
+                          <div className="flex items-center gap-x-1.5 mb-1 text-[9px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wider">
+                            <i className="fa-brands fa-google"></i> Translated
+                          </div>
+                          <p className="text-zinc-700 dark:text-zinc-300 text-xs leading-snug whitespace-pre-wrap">
+                            {translatedReviews[review.id]}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* 하단 날짜 및 번역 버튼 */}
+                      <div className="flex justify-between items-center mt-2.5">
                         <div className="text-[10px] text-zinc-400 dark:text-zinc-500">
-                        {new Date(review.createdAt).toLocaleDateString()}
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </div>
+                        
+                        <button 
+                          onClick={() => handleTranslate(review.id, review.content)}
+                          disabled={isTranslating[review.id]}
+                          className="text-[10px] flex items-center gap-x-1.5 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 px-2.5 py-1 rounded-full border border-blue-100 dark:border-blue-900 disabled:opacity-50"
+                        >
+                          <span>🌐</span> 
+                          {translatedReviews[review.id] ? t('modal.hideTranslate', '번역 닫기') : t('modal.translate', '번역하기')}
+                        </button>
                       </div>
-    
-                      <button 
-                        onClick={() => handleTranslate(review.content)}
-                        className="text-[10px] flex items-center gap-x-1 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors bg-blue-50 dark:bg-blue-950/30 px-2 py-0.5 rounded-full border border-blue-100 dark:border-blue-900"
-                      >
-                        <span>🌐</span> {t('modal.translate', '번역하기')}
-                      </button>
-                    </div>
                     </div>
                   ))
                 ) : (
@@ -331,7 +379,6 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
             {t('modal.getDirections')}
           </button>
           
-          {/* 🌟 Firebase와 연동된 즐겨찾기 버튼 (저장 상태에 따라 디자인 변경) */}
           <button 
             onClick={onToggleFavorite}
             className={`flex-1 py-3 sm:py-4 border font-semibold rounded-2xl sm:rounded-3xl flex items-center justify-center gap-x-2 text-xs sm:text-sm active:scale-[0.985] transition-all ${
@@ -342,7 +389,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
           >
             <span className="text-lg">{isFavorite ? '❤️' : '🤍'}</span>
             <span>{isFavorite ? t('modal.saved') : t('modal.saveFavorites')}</span>
-    </button>
+          </button>
         </div>
       </div>
 

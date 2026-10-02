@@ -101,7 +101,10 @@
     "anonymous": "Anonymous",
     "saved": "Saved",
     "saveFavorites": "Save to Favorites",
-    "translate": "Translate"
+    "translate": "Translate",
+    "hideTranslate": "Hide Translation",
+    "translating": "Translating...",
+    "translateError": "An error occurred during translation."
   },
   "footer": {
     "copyright": "Spark & Park — 2026 Graduation Project • Built with React + Firebase by Jisol Kim"
