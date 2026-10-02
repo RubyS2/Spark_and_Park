@@ -107,7 +107,15 @@
     "translating": "Traduction...",
     "translateError": "Erreur de traduction.",
     "translated": "Traduit",
-    "defaultReview": "Super endroit !"
+    "defaultReview": "Super endroit !",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edited": "Modifié",
+    "confirmDelete": "Voulez-vous vraiment supprimer cet avis ?",
+    "deleteError": "Une erreur est survenue lors de la suppression.",
+    "updateError": "Une erreur est survenue lors de la modification."
   },
   "footer": {
     "copyright": "Spark & Park — Projet de fin d'études 2026 • Créé avec React + Firebase par Jisol Kim"

@@ -107,7 +107,15 @@
     "translating": "翻译中...",
     "translateError": "翻译时出错。",
     "translated": "已翻译",
-    "defaultReview": "好地方！"
+    "defaultReview": "好地方！",
+    "edit": "编辑",
+    "delete": "删除",
+    "save": "保存",
+    "cancel": "取消",
+    "edited": "已编辑",
+    "confirmDelete": "您确定要删除此评论吗？",
+    "deleteError": "删除评论时出错。",
+    "updateError": "更新评论时出错。"
   },
   "footer": {
     "copyright": "Spark & Park — 2026 毕业项目 • 由 Jisol Kim 使用 React + Firebase 制作"

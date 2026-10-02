@@ -107,7 +107,15 @@
     "translating": "번역 중...",
     "translateError": "번역 중 오류가 발생했습니다.",
     "translated": "번역됨",
-    "defaultReview": "정말 멋진 곳이네요!"
+    "defaultReview": "정말 멋진 곳이네요!",
+    "edit": "수정",
+    "delete": "삭제",
+    "save": "저장",
+    "cancel": "취소",
+    "edited": "수정됨",
+    "confirmDelete": "정말 이 리뷰를 삭제하시겠습니까?",
+    "deleteError": "리뷰 삭제 중 오류가 발생했습니다.",
+    "updateError": "리뷰 수정 중 오류가 발생했습니다."
   },
   "footer": {
     "copyright": "Spark & Park — 2026 졸업 작품 • React + Firebase 제작: Jisol Kim"
