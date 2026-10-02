@@ -34,7 +34,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
         
         setReviews(fetchedReviews)
       } catch (error) {
-        console.error("리뷰 불러오기 에러:", error)
+        console.error("Error fetching reviews:", error)
       } finally {
         setIsLoading(false)
       }
@@ -50,7 +50,6 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
     ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviewCount).toFixed(1)
     : '0.0' 
 
-  // 별점 렌더링 헬퍼 (채워진 별 + 빈 별)
   const renderStars = (ratingStr) => {
     const num = Math.min(5, Math.floor(parseFloat(ratingStr)))
     return (
@@ -87,13 +86,14 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
 
   const handleAddReview = async () => {
     if (!userProfile) {
-      alert(t('modal.loginRequired', '리뷰를 작성하려면 로그인해 주세요!'))
+      alert(t('modal.loginRequired'))
       return
     }
     if (!reviewText.trim() && ratingValue === 0) return
 
     const newReviewData = {
       parkId: park.id,
+      userId: userProfile.sub,
       userName: userProfile.name,
       userPhoto: userProfile.picture,
       rating: ratingValue,
@@ -116,8 +116,8 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
       setReviewText('')
       setRatingValue(5)
     } catch (error) {
-      console.error("리뷰 저장 에러:", error)
-      alert(t('modal.reviewError', '리뷰 저장 중 문제가 발생했습니다.'))
+      console.error("Error saving review:", error)
+      alert(t('modal.reviewError'))
     }
   }
 
@@ -144,8 +144,8 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
       const translatedText = data[0].map(item => item[0]).join('')
       setTranslatedReviews(prev => ({ ...prev, [reviewId]: translatedText }))
     } catch (error) {
-      console.error("번역 에러:", error)
-      alert(t('modal.translateError', '번역 중 오류가 발생했습니다.'))
+      console.error("Translation error:", error)
+      alert(t('modal.translateError'))
     } finally {
       setIsTranslating(prev => ({ ...prev, [reviewId]: false }))
     }
@@ -195,10 +195,8 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
           </button>
         </div>
 
-        {/* 🌟 가로 스크롤 방지 및 PC 기준 1:1 비율(md:grid-cols-2)로 공간 최적화 */}
         <div className="overflow-x-hidden overflow-y-auto p-5 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 flex-1 text-zinc-800 dark:text-zinc-200">
           
-          {/* Left Column */}
           <div className="space-y-6 sm:space-y-8 min-w-0">
             <div>
               <div className="uppercase tracking-[1px] text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-3">
@@ -275,9 +273,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
             </div>
           </div>
 
-          {/* Right Column */}
           <div className="flex flex-col gap-5 sm:gap-6 min-w-0">
-            {/* 🌟 별점 카드 (반응형 래핑 및 사이즈 최적화) */}
             <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shrink-0">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -316,7 +312,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
               <div className="flex-1 overflow-y-auto space-y-3 pr-2 text-xs sm:text-sm">
                 {isLoading ? (
                   <div className="h-full flex items-center justify-center text-zinc-500 text-xs animate-pulse">
-                    {t('modal.loadingReviews', '리뷰 데이터를 불러오는 중...')}
+                    {t('modal.loadingReviews')}
                   </div>
                 ) : reviews.length > 0 ? (
                   reviews.map((review) => (
@@ -343,7 +339,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                       
                       {isTranslating[review.id] && (
                         <div className="mt-3 p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl text-[11px] text-zinc-500 animate-pulse border border-zinc-100 dark:border-zinc-800">
-                          {t('modal.translating', '번역 중...')}
+                          {t('modal.translating')}
                         </div>
                       )}
 
@@ -358,7 +354,6 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                         </div>
                       )}
 
-                      {/* 🌟 번역 버튼 & 날짜 영역 (flex-wrap과 shrink-0으로 반응형 대응) */}
                       <div className="flex flex-wrap justify-between items-end mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/50 gap-2">
                         <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
                           {new Date(review.createdAt).toLocaleDateString(i18n.language)}
@@ -370,7 +365,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                           className="text-[10px] sm:text-[11px] font-medium flex items-center gap-x-1.5 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 px-3 py-1.5 rounded-full border border-blue-200/60 dark:border-blue-800/60 disabled:opacity-50 shrink-0 whitespace-nowrap"
                         >
                           <span className="text-xs">🌐</span> 
-                          {translatedReviews[review.id] ? t('modal.hideTranslate', '번역 닫기') : t('modal.translate', '번역하기')}
+                          {translatedReviews[review.id] ? t('modal.hideTranslate') : t('modal.translate')}
                         </button>
                       </div>
                     </div>
@@ -386,7 +381,6 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
           </div>
         </div>
 
-        {/* Footer Actions */}
         <div className="shrink-0 px-5 sm:px-8 py-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-row gap-3 sm:gap-4">
           <button 
             onClick={getDirections}
@@ -409,7 +403,6 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
         </div>
       </div>
 
-      {/* 모달 별점 입력창 (생략 없이 원본 유지) */}
       {showRating && (
         <div className="fixed inset-0 bg-black/90 z-[110] flex items-center justify-center p-4" onClick={() => setShowRating(false)}>
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
