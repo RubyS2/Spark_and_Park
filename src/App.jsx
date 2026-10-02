@@ -54,7 +54,7 @@ const fetchAndMergeReviews = async (parksData) => {
       return { ...park, reviewCount: 0, rating: '0.0' }
     })
   } catch (error) {
-    console.error("리뷰 데이터 병합 에러:", error)
+    console.error("Error fetching reviews:", error)
     return parksData 
   }
 }
@@ -78,9 +78,7 @@ function App() {
   })
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  
-  // 🌟 모바일 필터 접기/펴기 상태
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false) // 모달 제어용 상태
 
   const [viewMode, setViewMode] = useState('all') 
   const [favoriteParkIds, setFavoriteParkIds] = useState([])
@@ -98,16 +96,16 @@ function App() {
             setFavoriteParkIds([])
           }
         } catch (error) {
-          console.error("즐겨찾기 불러오기 에러:", error)
+          console.error("Error fetching favorites:", error)
         }
 
         try {
-          const q = query(collection(db, 'reviews'), where('userName', '==', userProfile.name))
+          const q = query(collection(db, 'reviews'), where('userId', '==', userProfile.sub))
           const querySnapshot = await getDocs(q)
           const parkIds = querySnapshot.docs.map(doc => doc.data().parkId)
           setMyReviewedParkIds([...new Set(parkIds)])
         } catch (error) {
-          console.error("나의 리뷰 불러오기 에러:", error)
+          console.error("Error fetching my reviews:", error)
         }
       } else {
         setFavoriteParkIds([])
@@ -130,8 +128,8 @@ function App() {
     try {
       await setDoc(doc(db, 'userFavorites', userProfile.sub), { parks: newFavs })
     } catch (error) {
-      console.error("즐겨찾기 저장 에러:", error)
-      alert(t('nav.favUpdateError'))
+      console.error("Error saving favorites:", error)
+      alert(t('nav.favUpdateError', '즐겨찾기 업데이트 중 오류가 발생했습니다.'))
     }
   }
 
@@ -224,7 +222,7 @@ function App() {
             await loadParksWithReviews(fireData.riskLevel, currentPos)
           },
           async (err) => {
-            console.warn("GPS 거부 또는 대기 -> 기본 다운타운 좌표 적용", err)
+            console.warn("GPS Access Denied -> Using Downtown Default", err)
             await loadParksWithReviews(fireData.riskLevel, currentPos)
           },
           { enableHighAccuracy: true, timeout: 8000 }
@@ -284,12 +282,6 @@ function App() {
     }
   }
 
-  const addNewPark = (newParkData) => {
-    const newPark = { ...newParkData, id: Date.now(), rating: 0.0, reviewCount: 0, reviews: [], distance: "0.1 km" }
-    setParks(prev => [newPark, ...prev])
-    setSelectedPark(newPark)
-  }
-
   const resetFilters = () => {
     setFilters({ charcoal: true, gasOnly: true, restroom: false, playground: false, sports: false, dog: false, riskLow: true, riskModerate: true, riskHigh: true })
     setSearchTerm('')
@@ -298,78 +290,40 @@ function App() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-200 transition-colors duration-200">
       
-      {/* 🌟 헤더 네비게이션: 모바일과 PC 모두 예쁘게 나오도록 flex-wrap 활용 통합 배치 */}
       <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-50 transition-colors duration-200">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap md:flex-nowrap items-center justify-between gap-y-3 gap-x-4">
           
-          {/* 1. 로고 영역 */}
           <div className="flex items-center gap-x-2.5 shrink-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-lg sm:text-xl shadow-sm text-white">
-              🔥
-            </div>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-lg sm:text-xl shadow-sm text-white">🔥</div>
             <div>
               <span className="font-bold text-xl sm:text-2xl tracking-tighter text-zinc-900 dark:text-white">SPARK</span>
               <span className="font-bold text-xl sm:text-2xl tracking-tighter text-emerald-600 dark:text-emerald-400">&amp; PARK</span>
             </div>
           </div>
 
-          {/* 2. 모바일/PC 공통 우측 액션 영역 (로그인 버튼 구출!) */}
           <div className="flex items-center gap-x-1.5 sm:gap-x-3 order-2 md:order-3 shrink-0">
-            
-            {/* 다크모드 버튼 */}
-            <button
-              onClick={toggleDarkMode}
-              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 flex items-center justify-center gap-1.5 transition-all text-zinc-700 dark:text-zinc-200"
-            >
+            <button onClick={toggleDarkMode} className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 flex items-center justify-center gap-1.5 transition-all text-zinc-700 dark:text-zinc-200">
               <span className="text-sm">{isDarkMode ? '☀️' : '🌙'}</span>
               <span className="hidden sm:inline text-xs font-semibold">{isDarkMode ? 'Light' : 'Dark'}</span>
             </button>
 
-            {/* 언어 선택 (모바일에서는 간략하게) */}
-            <select
-              value={i18n.language?.substring(0,2) || 'en'}
-              onChange={(e) => changeLanguage(e.target.value)}
-              className="bg-zinc-100 dark:bg-zinc-800 text-xs sm:text-sm border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xl px-1.5 py-1.5 sm:px-3 sm:py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer font-medium"
-            >
-              <option value="en">EN</option>
-              <option value="ko">KO</option>
-              <option value="fr">FR</option>
-              <option value="zh">ZH</option>
-              <option value="pa">PA</option>
+            <select value={i18n.language?.substring(0,2) || 'en'} onChange={(e) => changeLanguage(e.target.value)} className="bg-zinc-100 dark:bg-zinc-800 text-xs sm:text-sm border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xl px-1.5 py-1.5 sm:px-3 sm:py-1.5 focus:outline-none focus:border-emerald-500 cursor-pointer font-medium">
+              <option value="en">EN</option><option value="ko">KO</option><option value="fr">FR</option><option value="zh">ZH</option><option value="pa">PA</option>
             </select>
 
-            {/* 로그인 / 프로필 드롭다운 (모바일 터치 호환성 개선) */}
-            <div 
-              className="relative ml-0.5 sm:ml-0"
-              onMouseEnter={() => window.innerWidth >= 768 && isLoggedIn && setIsDropdownOpen(true)}
-              onMouseLeave={() => window.innerWidth >= 768 && isLoggedIn && setIsDropdownOpen(false)}
-            >
+            <div className="relative ml-0.5 sm:ml-0" onMouseEnter={() => window.innerWidth >= 768 && isLoggedIn && setIsDropdownOpen(true)} onMouseLeave={() => window.innerWidth >= 768 && isLoggedIn && setIsDropdownOpen(false)}>
               {!isLoggedIn ? (
-                <button
-                  onClick={() => handleGoogleLogin()}
-                  className="flex items-center gap-x-1.5 sm:gap-x-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-600 px-3 sm:px-4 py-1.5 rounded-xl sm:rounded-3xl text-xs sm:text-sm cursor-pointer transition-all text-zinc-800 dark:text-zinc-200 font-semibold"
-                >
+                <button onClick={() => handleGoogleLogin()} className="flex items-center gap-x-1.5 sm:gap-x-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:border-emerald-600 px-3 sm:px-4 py-1.5 rounded-xl sm:rounded-3xl text-xs sm:text-sm cursor-pointer transition-all text-zinc-800 dark:text-zinc-200 font-semibold">
                   <i className="fa-brands fa-google text-red-500 text-[10px] sm:text-sm"></i>
                   <span className="hidden sm:inline">{t('nav.signIn', '로그인')}</span>
-                  <span className="sm:hidden">{t('nav.signIn')}</span>
+                  <span className="sm:hidden">{t('nav.signIn', '로그인')}</span>
                 </button>
               ) : (
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-x-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-emerald-600 pl-1.5 pr-3 py-1 rounded-full sm:rounded-3xl text-sm cursor-pointer transition-all"
-                >
+                <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center gap-x-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-emerald-600 pl-1.5 pr-3 py-1 rounded-full sm:rounded-3xl text-sm cursor-pointer transition-all">
                   <div className="w-6 h-6 sm:w-7 sm:h-7 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">
-                    {userProfile?.picture ? (
-                      <img src={userProfile.picture} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                      userProfile?.name?.charAt(0) || 'U'
-                    )}
+                    {userProfile?.picture ? <img src={userProfile.picture} alt="Profile" className="w-full h-full object-cover" /> : userProfile?.name?.charAt(0) || 'U'}
                   </div>
-                  <div className="text-left hidden sm:block">
-                    <div className="font-medium text-xs text-zinc-800 dark:text-zinc-200">
-                      {userProfile?.name || 'User'}
-                    </div>
-                  </div>
+                  <div className="text-left hidden sm:block"><div className="font-medium text-xs text-zinc-800 dark:text-zinc-200">{userProfile?.name || 'User'}</div></div>
                   <span className="sm:hidden text-xs font-bold text-zinc-500 dark:text-zinc-400">▼</span>
                 </button>
               )}
@@ -378,33 +332,11 @@ function App() {
                 <div className="absolute right-0 top-full pt-2 z-50 w-56 sm:w-60">
                   <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="py-2 flex flex-col">
-                      <button 
-                        onClick={() => { setViewMode('all'); setIsDropdownOpen(false) }}
-                        className={`text-left px-5 py-3 text-sm flex items-center gap-x-3 transition-colors ${viewMode === 'all' ? 'bg-emerald-50 dark:bg-emerald-900/30 font-semibold text-emerald-700 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
-                      >
-                        <span className="text-lg">🌍</span> {t('nav.showAll', '모든 공원')}
-                      </button>
-                      <button 
-                        onClick={() => { setViewMode('favorites'); setIsDropdownOpen(false) }}
-                        className={`text-left px-5 py-3 text-sm flex items-center gap-x-3 transition-colors ${viewMode === 'favorites' ? 'bg-emerald-50 dark:bg-emerald-900/30 font-semibold text-emerald-700 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
-                      >
-                        <span className="text-lg">❤️</span> {t('nav.favorites', '즐겨찾기')}
-                      </button>
-                      <button 
-                        onClick={() => { setViewMode('reviews'); setIsDropdownOpen(false) }}
-                        className={`text-left px-5 py-3 text-sm flex items-center gap-x-3 transition-colors ${viewMode === 'reviews' ? 'bg-emerald-50 dark:bg-emerald-900/30 font-semibold text-emerald-700 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
-                      >
-                        <span className="text-lg">📝</span> {t('nav.myReviews', '나의 리뷰')}
-                      </button>
-                      
+                      <button onClick={() => { setViewMode('all'); setIsDropdownOpen(false) }} className={`text-left px-5 py-3 text-sm flex items-center gap-x-3 transition-colors ${viewMode === 'all' ? 'bg-emerald-50 dark:bg-emerald-900/30 font-semibold text-emerald-700 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}><span className="text-lg">🌍</span> {t('nav.showAll', '모든 공원')}</button>
+                      <button onClick={() => { setViewMode('favorites'); setIsDropdownOpen(false) }} className={`text-left px-5 py-3 text-sm flex items-center gap-x-3 transition-colors ${viewMode === 'favorites' ? 'bg-emerald-50 dark:bg-emerald-900/30 font-semibold text-emerald-700 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}><span className="text-lg">❤️</span> {t('nav.favorites', '즐겨찾기')}</button>
+                      <button onClick={() => { setViewMode('reviews'); setIsDropdownOpen(false) }} className={`text-left px-5 py-3 text-sm flex items-center gap-x-3 transition-colors ${viewMode === 'reviews' ? 'bg-emerald-50 dark:bg-emerald-900/30 font-semibold text-emerald-700 dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}><span className="text-lg">📝</span> {t('nav.myReviews', '나의 리뷰')}</button>
                       <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-1.5 mx-2"></div>
-                      
-                      <button 
-                        onClick={handleLogout}
-                        className="w-full text-left px-5 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center gap-x-3 font-medium"
-                      >
-                        <i className="fa-solid fa-arrow-right-from-bracket text-lg w-5 text-center"></i> {t('nav.logout', '로그아웃')}
-                      </button>
+                      <button onClick={handleLogout} className="w-full text-left px-5 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center gap-x-3 font-medium"><i className="fa-solid fa-arrow-right-from-bracket text-lg w-5 text-center"></i> {t('nav.logout', '로그아웃')}</button>
                     </div>
                   </div>
                 </div>
@@ -412,16 +344,9 @@ function App() {
             </div>
           </div>
 
-          {/* 3. 검색창 (모바일에서는 맨 아래 한 줄을 꽉 채우도록) */}
           <div className="w-full md:w-auto md:flex-1 md:max-w-md order-3 md:order-2">
             <div className="relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t('nav.searchPlaceholder', '공원 이름 검색...')}
-                className="w-full bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 focus:border-emerald-500 pl-10 pr-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-sm focus:outline-none text-zinc-900 dark:text-white placeholder-zinc-500"
-              />
+              <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder={t('nav.searchPlaceholder', '공원 이름 검색...')} className="w-full bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 focus:border-emerald-500 pl-10 pr-4 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-sm focus:outline-none text-zinc-900 dark:text-white placeholder-zinc-500" />
               <span className="absolute left-3.5 top-2.5 sm:top-3 text-zinc-400 text-sm">🔍</span>
             </div>
           </div>
@@ -459,26 +384,64 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 pb-12">
           
           <div className="lg:col-span-3">
-            {/* 🌟 모바일 필터 아코디언 버튼 (화면 공간 확보 핵심!) */}
+            {/* 🌟 모바일 필터 열기 버튼 (바텀 시트 팝업 호출) */}
             <button
-              onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+              onClick={() => setIsMobileFilterOpen(true)}
               className="w-full lg:hidden mb-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-4 py-3.5 rounded-2xl flex justify-between items-center shadow-sm text-sm font-semibold text-zinc-800 dark:text-zinc-200 active:scale-[0.99] transition-transform"
             >
               <div className="flex items-center gap-x-2.5">
                 <span className="text-lg bg-zinc-100 dark:bg-zinc-800 w-8 h-8 flex items-center justify-center rounded-lg">🎛️</span>
                 {t('filters.title', '필터 설정')}
               </div>
-              <span className={`text-zinc-400 transition-transform duration-300 ${isMobileFilterOpen ? 'rotate-180' : ''}`}>▼</span>
+              <span className="text-zinc-400 text-xs bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-xl">설정하기 ➔</span>
             </button>
 
-            {/* 필터 본문 (모바일에서는 접혀있음) */}
-            <div className={`${isMobileFilterOpen ? 'block' : 'hidden'} lg:block transition-all`}>
-              <Filters 
-                filters={filters} 
-                onChange={handleFilterChange} 
-                onReset={resetFilters} 
-              />
+            {/* 🌟 데스크톱 전용 필터 (PC 화면에서는 항상 표출됨) */}
+            <div className="hidden lg:block">
+              <Filters filters={filters} onChange={handleFilterChange} onReset={resetFilters} />
             </div>
+
+            {/* 🌟 모바일 전용 바텀 시트 (Bottom Sheet) 모달 필터 */}
+            {isMobileFilterOpen && (
+              <div 
+                className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex justify-center items-end lg:hidden transition-all"
+                onClick={() => setIsMobileFilterOpen(false)}
+              >
+                <div 
+                  className="bg-white dark:bg-zinc-950 w-full max-h-[85vh] overflow-y-auto rounded-t-3xl p-5 sm:p-6 animate-in slide-in-from-bottom-full duration-300 shadow-2xl flex flex-col"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* 바텀 시트 헤더 */}
+                  <div className="flex justify-between items-center mb-5 pb-4 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
+                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-x-2">
+                      <span>🎛️</span> {t('filters.title', '필터 설정')}
+                    </h3>
+                    <button 
+                      onClick={() => setIsMobileFilterOpen(false)}
+                      className="w-8 h-8 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 active:scale-90 transition-transform"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  
+                  {/* 필터 본문 영역 */}
+                  <div className="pb-4 flex-1">
+                    <Filters filters={filters} onChange={handleFilterChange} onReset={resetFilters} />
+                  </div>
+
+                  {/* 🌟 고정된 필터 적용 버튼 (결과 개수 표시) */}
+                  <div className="sticky bottom-0 pt-4 pb-2 bg-white dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800/50 shrink-0">
+                    <button 
+                      onClick={() => setIsMobileFilterOpen(false)}
+                      className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-2xl active:scale-[0.98] transition-transform shadow-lg shadow-emerald-900/20 text-sm sm:text-base flex items-center justify-center gap-x-2"
+                    >
+                      <span>적용하고 결과 보기</span>
+                      <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">{filteredParks.length}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-6">
@@ -523,11 +486,8 @@ function App() {
                   {t('list.sortedBy', { count: filteredParks.length })}
                 </div>
               </div>
-              <button 
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
-                className="text-xs text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1.5 rounded-lg"
-              >
-                {t('list.top')}
+              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-xs text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1.5 rounded-lg">
+                {t('list.top', '맨위로 ↑')}
               </button>
             </div>
 
