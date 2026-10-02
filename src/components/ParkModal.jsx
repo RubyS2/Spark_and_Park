@@ -298,7 +298,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                 onClick={() => setShowRating(true)}
                 className="mt-5 w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.98] font-bold rounded-xl text-xs sm:text-sm transition-all shadow-sm"
               >
-                ⭐ {t('modal.ratePark')}
+                {t('modal.ratePark')}
               </button>
             </div>
 
@@ -392,7 +392,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
             onClick={getDirections}
             className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-500 font-semibold text-white rounded-xl flex items-center justify-center gap-x-2 text-xs sm:text-sm active:scale-[0.985] transition-all shadow-md shadow-emerald-900/10 shrink-0"
           >
-            🧭 {t('modal.getDirections')}
+            {t('modal.getDirections')}
           </button>
           
           <button 
