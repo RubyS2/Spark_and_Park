@@ -20,7 +20,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
-// 내 위치 마커 (파란색 도트)
 const userLocationIcon = L.divIcon({
   className: 'user-marker',
   html: `<div style="background-color: #3b82f6; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);"></div>`,
@@ -451,18 +450,16 @@ function App() {
                   </Marker>
                 )}
 
-                {/* 🌟 100% SVG 기반 모던 미니멀리즘 핀 디자인 적용! */}
                 {filteredParks.filter(park => park && Number.isFinite(park.lat) && Number.isFinite(park.lng)).map(park => {
-                    let pinColor = '#ef4444'; // 기본: 빨강 (금지)
+                    let pinColor = '#ef4444'; 
                     
                     if (park.bbq === 'charcoal') { 
-                      pinColor = '#10b981'; // 숯불 가능: 에메랄드
+                      pinColor = '#10b981'; 
                     } else if (park.bbq === 'gas-only') { 
-                      pinColor = '#f59e0b'; // 가스 전용: 앰버(호박색)
+                      pinColor = '#f59e0b'; 
                     }
 
                     const customIcon = L.divIcon({
-                      // Leaflet의 기본 하얀 네모 상자(leaflet-div-icon)를 제거하기 위한 커스텀 클래스
                       className: 'custom-modern-pin', 
                       html: `
                         <div style="filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.25)); transition: transform 0.2s;">
@@ -473,7 +470,6 @@ function App() {
                         </div>
                       `,
                       iconSize: [26, 36],
-                      // 핀의 뾰족한 끝 부분이 실제 좌표를 가리키도록 Anchor 설정 (가운데 아래)
                       iconAnchor: [13, 36] 
                     })
                     
@@ -491,8 +487,11 @@ function App() {
             </div>
           </div>
 
-          <div className="lg:col-span-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-5 h-fit shadow-sm">
-            <div className="flex justify-between items-end mb-4 px-1">
+          {/* 🌟 공원 목록 컨테이너 (Sticky 헤더 + 내부 스크롤 적용) */}
+          <div className="lg:col-span-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-3xl h-fit shadow-sm flex flex-col overflow-hidden">
+            
+            {/* 🌟 상단바 고정 (Sticky Header) */}
+            <div className="sticky top-0 z-20 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-4 py-4 sm:px-5 sm:py-5 border-b border-zinc-100 dark:border-zinc-800/50 flex justify-between items-end shrink-0">
               <div>
                 <div className="font-bold text-base sm:text-lg text-zinc-900 dark:text-white">
                   {viewMode === 'favorites' ? t('nav.favorites') : viewMode === 'reviews' ? t('nav.myReviews') : t('list.title', '가까운 공원 목록')}
@@ -501,12 +500,20 @@ function App() {
                   {t('list.sortedBy', { count: filteredParks.length })}
                 </div>
               </div>
-              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-xs text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1.5 rounded-lg">
+              <button 
+                onClick={() => {
+                  const listEl = document.getElementById('park-list-container');
+                  if (listEl) listEl.scrollTo({ top: 0, behavior: 'smooth' });
+                  else window.scrollTo({ top: 0, behavior: 'smooth' }); // 폴백
+                }} 
+                className="text-xs text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg font-medium"
+              >
                 {t('list.top', '맨위로 ↑')}
               </button>
             </div>
 
-            <div className="space-y-3 lg:max-h-[540px] lg:overflow-y-auto pr-1">
+            {/* 🌟 내부 스크롤이 적용되는 목록 영역 */}
+            <div id="park-list-container" className="p-4 sm:p-5 space-y-3 max-h-[400px] sm:max-h-[500px] lg:max-h-[530px] overflow-y-auto">
               {isParksLoading ? (
                 <div className="text-center py-12 flex flex-col items-center justify-center">
                   <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mb-3"></div>
@@ -522,6 +529,7 @@ function App() {
                 </div>
               )}
             </div>
+
           </div>
 
         </div>
