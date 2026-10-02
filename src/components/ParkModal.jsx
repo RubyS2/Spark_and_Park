@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { db } from '../firebase' 
-// 🌟 doc, deleteDoc, updateDoc 도구 추가
 import { collection, addDoc, query, where, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore'
 
 export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavorite, onToggleFavorite }) {
@@ -16,7 +15,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
   const [translatedReviews, setTranslatedReviews] = useState({}) 
   const [isTranslating, setIsTranslating] = useState({})
 
-  // 🌟 리뷰 수정을 위한 상태값 추가
+  // 🌟 리뷰 수정을 위한 상태값 (복구 완료!)
   const [editingReviewId, setEditingReviewId] = useState(null)
   const [editReviewText, setEditReviewText] = useState('')
   const [editRatingValue, setEditRatingValue] = useState(5)
@@ -40,7 +39,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
         
         setReviews(fetchedReviews)
       } catch (error) {
-        console.error("Error fetching reviews:", error)
+        console.error("Error fetching reviews:", error) // 영문화 완료
       } finally {
         setIsLoading(false)
       }
@@ -74,14 +73,14 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
 
   const riskInfo = getRiskInfo(park.risk)
 
-  // 🌟 새 리뷰 등록
+  // 새 리뷰 등록
   const handleAddReview = async () => {
     if (!userProfile) { alert(t('modal.loginRequired')); return }
     if (!reviewText.trim() && ratingValue === 0) return
 
     const newReviewData = {
       parkId: park.id,
-      userId: userProfile.sub,
+      userId: userProfile.sub, // 고유 ID 저장
       userName: userProfile.name,
       userPhoto: userProfile.picture,
       rating: ratingValue,
@@ -106,9 +105,9 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
     }
   }
 
-  // 🌟 리뷰 삭제 기능
+  // 🌟 리뷰 삭제 기능 (복구 완료!)
   const handleDeleteReview = async (reviewId) => {
-    if (!window.confirm(t('modal.confirmDelete', '정말 이 리뷰를 삭제하시겠습니까?'))) return
+    if (!window.confirm(t('modal.confirmDelete'))) return
 
     try {
       await deleteDoc(doc(db, 'reviews', reviewId))
@@ -121,7 +120,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
       onUpdate({ ...park, reviewCount: newCount, rating: newAvg })
     } catch (error) {
       console.error("Error deleting review:", error)
-      alert(t('modal.deleteError', '리뷰 삭제 중 오류가 발생했습니다.'))
+      alert(t('modal.deleteError'))
     }
   }
 
@@ -132,7 +131,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
     setEditRatingValue(review.rating)
   }
 
-  // 🌟 리뷰 수정 저장
+  // 🌟 리뷰 수정 저장 (복구 완료!)
   const handleUpdateReview = async (reviewId) => {
     if (!editReviewText.trim() && editRatingValue === 0) return
 
@@ -156,10 +155,11 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
       setEditingReviewId(null)
     } catch (error) {
       console.error("Error updating review:", error)
-      alert(t('modal.updateError', '리뷰 수정 중 오류가 발생했습니다.'))
+      alert(t('modal.updateError'))
     }
   }
 
+  // 번역 기능
   const handleTranslate = async (reviewId, text) => {
     if (translatedReviews[reviewId]) {
       setTranslatedReviews(prev => { const newState = { ...prev }; delete newState[reviewId]; return newState })
@@ -286,13 +286,12 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                           )}
                           <span className="font-semibold text-zinc-800 dark:text-zinc-200">{review.userName || t('modal.anonymous')}</span>
                         </div>
-                        {/* 편집 모드가 아닐 때만 별점 표시 */}
                         {editingReviewId !== review.id && (
                           <div className="flex gap-x-0.5 text-[10px] sm:text-xs">{renderStars(review.rating || 5)}</div>
                         )}
                       </div>
                       
-                      {/* 🌟 수정 모드 진입 시 입력창 띄우기 */}
+                      {/* 🌟 수정 모드 창 */}
                       {editingReviewId === review.id ? (
                         <div className="mt-2 bg-zinc-50 dark:bg-zinc-950 border border-emerald-500/30 rounded-xl p-3 animate-in fade-in zoom-in-95 duration-200">
                           <div className="flex gap-x-1 text-lg mb-2.5">
@@ -306,8 +305,8 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                             className="w-full h-20 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl p-2.5 text-xs text-zinc-900 dark:text-white focus:border-emerald-500 outline-none resize-none"
                           />
                           <div className="flex justify-end gap-x-2 mt-3">
-                            <button onClick={() => setEditingReviewId(null)} className="px-3.5 py-2 text-[10px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition-colors">{t('modal.cancel', '취소')}</button>
-                            <button onClick={() => handleUpdateReview(review.id)} className="px-4 py-2 text-[10px] sm:text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-sm active:scale-95 transition-all">{t('modal.save', '저장')}</button>
+                            <button onClick={() => setEditingReviewId(null)} className="px-3.5 py-2 text-[10px] sm:text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl transition-colors">{t('modal.cancel')}</button>
+                            <button onClick={() => handleUpdateReview(review.id)} className="px-4 py-2 text-[10px] sm:text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-sm active:scale-95 transition-all">{t('modal.save')}</button>
                           </div>
                         </div>
                       ) : (
@@ -323,17 +322,18 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
                           )}
 
                           <div className="flex flex-wrap justify-between items-end mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/50 gap-2">
+                            
                             <div className="flex items-center flex-wrap gap-2">
                               <div className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
                                 {new Date(review.createdAt).toLocaleDateString(i18n.language)}
-                                {review.updatedAt && <span className="ml-1 italic font-normal text-zinc-300 dark:text-zinc-600">({t('modal.edited', '수정됨')})</span>}
+                                {review.updatedAt && <span className="ml-1 italic font-normal text-zinc-300 dark:text-zinc-600">({t('modal.edited')})</span>}
                               </div>
                               
-                              {/* 🌟 내 리뷰일 때만 나타나는 수정/삭제 버튼 */}
-                              {userProfile && userProfile.sub === review.userId && (
+                              {/* 🌟 수정/삭제 버튼 (본인 리뷰일 때만 나타남) */}
+                              {userProfile && (userProfile.sub === review.userId) && (
                                 <div className="flex items-center gap-x-2 ml-1 pl-2 border-l border-zinc-200 dark:border-zinc-700">
-                                  <button onClick={() => startEdit(review)} className="text-[10px] text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold transition-colors">{t('modal.edit', '수정')}</button>
-                                  <button onClick={() => handleDeleteReview(review.id)} className="text-[10px] text-zinc-400 hover:text-red-500 dark:hover:text-red-400 font-semibold transition-colors">{t('modal.delete', '삭제')}</button>
+                                  <button onClick={() => startEdit(review)} className="text-[10px] text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold transition-colors">{t('modal.edit')}</button>
+                                  <button onClick={() => handleDeleteReview(review.id)} className="text-[10px] text-zinc-400 hover:text-red-500 dark:hover:text-red-400 font-semibold transition-colors">{t('modal.delete')}</button>
                                 </div>
                               )}
                             </div>
