@@ -34,7 +34,8 @@
     "lowRisk": "● 低風險",
     "moderate": "● 中度風險",
     "highRisk": "● 高度 / 極端風險",
-    "openSettings": "设置"
+    "openSettings": "设置",
+    "apply": "应用并查看结果"
   },
   "list": {
     "title": "附近公園",

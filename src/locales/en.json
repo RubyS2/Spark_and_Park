@@ -34,7 +34,8 @@
     "lowRisk": "● Low Risk",
     "moderate": "● Moderate",
     "highRisk": "● High / Extreme",
-    "openSettings": "Detail Settings"
+    "openSettings": "Detail Settings",
+    "apply": "Apply and View Results"
   },
   "list": {
     "title": "Nearby Parks",

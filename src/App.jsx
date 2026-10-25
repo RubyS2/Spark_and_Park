@@ -303,7 +303,7 @@ function App() {
 
           <div className="flex items-center gap-x-1.5 sm:gap-x-3 order-2 md:order-3 shrink-0">
             <button onClick={toggleDarkMode} className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 flex items-center justify-center gap-1.5 transition-all text-zinc-700 dark:text-zinc-200">
-              <span className="text-sm">{isDarkMode ? '☀️️' : '🌙'}</span>
+              <span className="text-sm">{isDarkMode ? '☀️' : '🌙'}</span>
               <span className="hidden sm:inline text-xs font-semibold">{isDarkMode ? 'Light' : 'Dark'}</span>
             </button>
 
@@ -344,7 +344,6 @@ function App() {
             </div>
           </div>
 
-          {/* 🌟 검색창 영역 (X 버튼 추가 및 우측 패딩 조정) */}
           <div className="w-full md:w-auto md:flex-1 md:max-w-md order-3 md:order-2">
             <div className="relative">
               <input 
@@ -356,7 +355,6 @@ function App() {
               />
               <span className="absolute left-3.5 top-2.5 sm:top-3 text-zinc-400 text-sm">🔍</span>
               
-              {/* 🌟 검색어가 입력되었을 때만 나타나는 X (전체 삭제) 버튼 */}
               {searchTerm && (
                 <button
                   type="button"
@@ -450,7 +448,7 @@ function App() {
                       onClick={() => setIsMobileFilterOpen(false)}
                       className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-2xl active:scale-[0.98] transition-transform shadow-lg shadow-emerald-900/20 text-sm sm:text-base flex items-center justify-center gap-x-2"
                     >
-                      <span>적용하고 결과 보기</span>
+                      <span>{t('filters.apply', '적용하고 결과 보기')}</span>
                       <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">{filteredParks.length}</span>
                     </button>
                   </div>
@@ -469,13 +467,15 @@ function App() {
                   </Marker>
                 )}
 
+                {/* 🌟 핀 색상 기준을 화재 위험 등급(park.risk)에 따라 변경 */}
                 {filteredParks.filter(park => park && Number.isFinite(park.lat) && Number.isFinite(park.lng)).map(park => {
-                    let pinColor = '#ef4444'; 
+                    let pinColor = '#10b981'; // 기본: Low Risk (안전 - 초록색)
+                    const risk = (park.risk || '').toLowerCase();
                     
-                    if (park.bbq === 'charcoal') { 
-                      pinColor = '#10b981'; 
-                    } else if (park.bbq === 'gas-only') { 
-                      pinColor = '#f59e0b'; 
+                    if (risk === 'moderate') { 
+                      pinColor = '#f59e0b'; // Moderate Risk (주의 - 주황/노란색)
+                    } else if (risk === 'high') { 
+                      pinColor = '#ef4444'; // High Risk (위험 - 빨간색)
                     }
 
                     const customIcon = L.divIcon({

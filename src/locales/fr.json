@@ -34,7 +34,8 @@
     "lowRisk": "● Risque faible",
     "moderate": "● Modéré",
     "highRisk": "● Élevé / Extrême",
-    "openSettings": "Paramètres"
+    "openSettings": "Paramètres",
+    "apply": "Appliquer et voir les résultats"
   },
   "list": {
     "title": "Parcs à proximité",
