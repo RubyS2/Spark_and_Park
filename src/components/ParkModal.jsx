@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { db } from '../firebase' 
 import { collection, addDoc, query, where, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore'
 
-export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavorite, onToggleFavorite }) {
+export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavorite, onToggleFavorite, onReviewChanged }) {
   const { t, i18n } = useTranslation()
   const [showRating, setShowRating] = useState(false)
   const [ratingValue, setRatingValue] = useState(5)
@@ -105,7 +105,7 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
     }
   }
 
-  // 🌟 리뷰 삭제 기능 (복구 완료!)
+  // 리뷰 삭제 기능 
   const handleDeleteReview = async (reviewId) => {
     if (!window.confirm(t('modal.confirmDelete'))) return
 
@@ -118,7 +118,12 @@ export default function ParkModal({ park, onClose, onUpdate, userProfile, isFavo
       const newAvg = newCount > 0 ? (newReviews.reduce((sum, r) => sum + r.rating, 0) / newCount).toFixed(1) : '0.0'
       
       onUpdate({ ...park, reviewCount: newCount, rating: newAvg })
-    } catch (error) {
+    
+      if (onReviewChanged) {
+        onReviewChanged()
+      }
+    } 
+    catch (error) {
       console.error("Error deleting review:", error)
       alert(t('modal.deleteError'))
     }

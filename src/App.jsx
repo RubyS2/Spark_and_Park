@@ -482,7 +482,21 @@ function App() {
 
   }, [])
 
-
+// 🌟 나의 리뷰 목록을 Firestore에서 다시 불러와 동기화하는 함수
+  const refreshMyReviews = async () => {
+    if (userProfile?.sub) {
+      try {
+        const q = query(collection(db, 'reviews'), where('userId', '==', userProfile.sub))
+        const querySnapshot = await getDocs(q)
+        const parkIds = querySnapshot.docs.map(doc => doc.data().parkId)
+        setMyReviewedParkIds([...new Set(parkIds)])
+      } catch (error) {
+        console.error("Error refreshing my reviews:", error)
+      }
+    } else {
+      setMyReviewedParkIds([])
+    }
+  }
 
   useEffect(() => {
 
@@ -1118,8 +1132,16 @@ function App() {
 
       {selectedPark && (
 
-        <ParkModal park={selectedPark} onClose={closeModal} onUpdate={updatePark} userProfile={userProfile} isFavorite={favoriteParkIds.includes(selectedPark.id)} onToggleFavorite={() => toggleFavorite(selectedPark.id)} />
-
+        <ParkModal 
+        park={selectedPark} 
+        onClose={closeModal} 
+        onUpdate={updatePark} 
+        userProfile={userProfile} 
+        isFavorite={favoriteParkIds.includes(selectedPark.id)} 
+        onToggleFavorite={() => toggleFavorite(selectedPark.id)} 
+        onReviewChanged={refreshMyReviews}
+        />
+        
       )}
 
 
