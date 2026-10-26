@@ -70,8 +70,6 @@ const fetchAndMergeReviews = async (parksData) => {
 
       const data = doc.data()
 
-      // [수정]: 타입 불일치로 인한 매칭 실패를 막기 위해 String 강제 변환
-
       const pid = String(data.parkId)
 
       if (!aggregates[pid]) {
@@ -90,7 +88,7 @@ const fetchAndMergeReviews = async (parksData) => {
 
     return parksData.map(park => {
 
-      const agg = aggregates[String(park.id)] // [수정]: String 매칭
+      const agg = aggregates[String(park.id)] 
 
       if (agg && agg.count > 0) {
 
@@ -106,7 +104,7 @@ const fetchAndMergeReviews = async (parksData) => {
 
       }
 
-      // 리뷰가 없으면 더미 데이터 무시하고 0으로 초기화
+   
 
       return { ...park, reviewCount: 0, rating: '0.0' }
 
@@ -116,7 +114,7 @@ const fetchAndMergeReviews = async (parksData) => {
 
     console.error("Error fetching reviews:", error)
 
-    // [수정]: 에러 발생 시에도 랜덤(더미) 데이터를 없애고 0으로 초기화
+   
 
     return parksData.map(park => ({
 
@@ -616,18 +614,16 @@ function App() {
 
          
 
-          <div className="flex items-center gap-x-2.5 shrink-0">
-
-            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-lg sm:text-xl shadow-sm text-white">🔥</div>
-
+         {/* 🌟 로고 클릭 시 새로고침 및 &PARK 띄어쓰기 수정 */}
+          <div 
+            onClick={() => window.location.reload()} 
+            className="flex items-center gap-x-2.5 shrink-0 cursor-pointer group"
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-emerald-600 rounded-xl flex items-center justify-center text-lg sm:text-xl shadow-sm text-white group-hover:scale-105 transition-transform">🔥</div>
             <div>
-
               <span className="font-bold text-xl sm:text-2xl tracking-tighter text-zinc-900 dark:text-white">SPARK</span>
-
-              <span className="font-bold text-xl sm:text-2xl tracking-tighter text-emerald-600 dark:text-emerald-400">&amp; PARK</span>
-
+              <span className="font-bold text-xl sm:text-2xl tracking-tighter text-emerald-600 dark:text-emerald-400">&amp;PARK</span>
             </div>
-
           </div>
 
 
