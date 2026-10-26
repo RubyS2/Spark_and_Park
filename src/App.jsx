@@ -9,7 +9,8 @@ import ParkCard from './components/ParkCard'
 import { initialParks } from './data/parks'
 import { getVancouverFireRisk, fetchVancouverParks } from './data/fireService'
 import { getGoogleMapsDirectionsUrl, calculateDistanceKm } from './utils/geoUtils'
-import { useGoogleLogin } from '@react-oauth/google'
+// 파이어베이스 자체 인증 모듈로 교체
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth' 
 import { db } from './firebase'
 import { collection, getDocs, doc, getDoc, setDoc, query, where } from 'firebase/firestore'
 
@@ -34,7 +35,6 @@ const fetchAndMergeReviews = async (parksData) => {
     
     snapshot.forEach(doc => {
       const data = doc.data()
-      // [수정]: 타입 불일치로 인한 매칭 실패를 막기 위해 String 강제 변환
       const pid = String(data.parkId)
       if (!aggregates[pid]) {
         aggregates[pid] = { sum: 0, count: 0 }
@@ -44,7 +44,7 @@ const fetchAndMergeReviews = async (parksData) => {
     })
 
     return parksData.map(park => {
-      const agg = aggregates[String(park.id)] // [수정]: String 매칭
+      const agg = aggregates[String(park.id)]
       if (agg && agg.count > 0) {
         return {
           ...park,
@@ -52,12 +52,10 @@ const fetchAndMergeReviews = async (parksData) => {
           rating: (agg.sum / agg.count).toFixed(1)
         }
       }
-      // 리뷰가 없으면 더미 데이터 무시하고 0으로 초기화
       return { ...park, reviewCount: 0, rating: '0.0' }
     })
   } catch (error) {
-    console.error("Error fetching reviews:", error)
-    // [수정]: 에러 발생 시에도 랜덤(더미) 데이터를 없애고 0으로 초기화
+    console.error("Firebase Rule 읽기 권한 거부 또는 에러:", error)
     return parksData.map(park => ({
       ...park,
       reviewCount: 0,
@@ -140,29 +138,41 @@ function App() {
     }
   }
 
-  const handleGoogleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        })
-        const data = await res.json()
-        setUserProfile(data)
-        setIsLoggedIn(true)
-        localStorage.setItem('sparkUser', JSON.stringify(data))
-      } catch (err) {
-        console.error("Failed to fetch user info", err)
-      }
-    },
-    onError: (error) => console.error('Login Failed:', error)
-  })
+  // 🔥 Firebase 자체 인증 로직으로 변경 (보안 강화)
+  const handleGoogleLogin = async () => {
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      const userData = {
+        name: user.displayName,
+        picture: user.photoURL,
+        sub: user.uid, // 기존 로직 호환을 위해 uid를 sub에 저장
+        email: user.email
+      };
+      
+      setUserProfile(userData);
+      setIsLoggedIn(true);
+      localStorage.setItem('sparkUser', JSON.stringify(userData));
+    } catch (error) {
+      console.error('Firebase Login Failed:', error);
+    }
+  }
 
-  const handleLogout = () => {
-    setIsLoggedIn(false)
-    setUserProfile(null)
-    setIsDropdownOpen(false)
-    setViewMode('all')
-    localStorage.removeItem('sparkUser')
+  const handleLogout = async () => {
+    const auth = getAuth();
+    try {
+      await signOut(auth);
+      setIsLoggedIn(false);
+      setUserProfile(null);
+      setIsDropdownOpen(false);
+      setViewMode('all');
+      localStorage.removeItem('sparkUser');
+    } catch (error) {
+      console.error('Logout Failed:', error);
+    }
   }
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -477,15 +487,15 @@ function App() {
                 {filteredParks.filter(park => park && Number.isFinite(park.lat) && Number.isFinite(park.lng)).map(park => {
                     let pinColor = '#6b7280'; // 기본 회색
 
-                    // [수정]: 개별 공원 risk가 없을 경우 currentFireRisk 대체 판정 및 명확한 문자열 비교
+                    // 🔥 필터 UI 색상과 완벽하게 일치하도록 수정
                     const riskStr = String(park.risk || currentFireRisk.riskLevel || '').toLowerCase().trim();
 
-                    if (riskStr.includes('extreme') || riskStr.includes('ban')) {
-                      pinColor = '#ef4444'; // 레드 (위험/금지)
-                    } else if (riskStr.includes('high')) {
-                      pinColor = '#f97316'; // 주황색 (주의)
-                    } else if (riskStr.includes('moderate') || riskStr.includes('low')) {
-                      pinColor = '#10b981'; // 초록색 (안전/보통)
+                    if (riskStr.includes('high') || riskStr.includes('extreme') || riskStr.includes('ban')) {
+                      pinColor = '#ef4444'; // 위험/금지 (High/Extreme) - 빨강
+                    } else if (riskStr.includes('moderate')) {
+                      pinColor = '#f59e0b'; // 주의 (Moderate) - 주황
+                    } else if (riskStr.includes('low')) {
+                      pinColor = '#10b981'; // 안전 (Low) - 초록
                     }
 
                     const customIcon = L.divIcon({
