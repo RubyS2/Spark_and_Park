@@ -38,14 +38,13 @@ const fetchAndMergeReviews = async (parksData) => {
       if (!aggregates[pid]) {
         aggregates[pid] = { sum: 0, count: 0 }
       }
-      // [수정 1, 2]: Firestore에서 불러온 별점이 문자열일 경우를 대비해 Number로 강제 변환하여 정확한 평균값 계산
-      aggregates[pid].sum += Number(data.rating) || 0
+      aggregates[pid].sum += data.rating
       aggregates[pid].count += 1
     })
 
     return parksData.map(park => {
       const agg = aggregates[park.id]
-      if (agg && agg.count > 0) {
+      if (agg) {
         return {
           ...park,
           reviewCount: agg.count,
@@ -56,7 +55,7 @@ const fetchAndMergeReviews = async (parksData) => {
     })
   } catch (error) {
     console.error("Error fetching reviews:", error)
-    return parksData
+    return parksData 
   }
 }
 
@@ -79,9 +78,9 @@ function App() {
   })
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false) 
 
-  const [viewMode, setViewMode] = useState('all')
+  const [viewMode, setViewMode] = useState('all') 
   const [favoriteParkIds, setFavoriteParkIds] = useState([])
   const [myReviewedParkIds, setMyReviewedParkIds] = useState([])
 
@@ -198,13 +197,13 @@ function App() {
       let currentPos = { lat: 49.2827, lng: -123.1207, isRealGps: false, label: 'Downtown Vancouver' }
 
       const loadParksWithReviews = async (riskLevel, pos) => {
-        setIsParksLoading(true)
+        setIsParksLoading(true) 
         const apiParks = await fetchVancouverParks(riskLevel, pos)
         if (apiParks) {
           const mergedParks = await fetchAndMergeReviews(apiParks)
           setParks(mergedParks)
         }
-        setIsParksLoading(false)
+        setIsParksLoading(false) 
       }
 
       if (navigator.geolocation) {
@@ -242,7 +241,7 @@ function App() {
     else if (viewMode === 'reviews') result = result.filter(p => myReviewedParkIds.includes(p.id))
 
     if (searchTerm) {
-      result = result.filter(p =>
+      result = result.filter(p => 
         (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (p.neighbourhood && p.neighbourhood.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -304,7 +303,7 @@ function App() {
 
           <div className="flex items-center gap-x-1.5 sm:gap-x-3 order-2 md:order-3 shrink-0">
             <button onClick={toggleDarkMode} className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 flex items-center justify-center gap-1.5 transition-all text-zinc-700 dark:text-zinc-200">
-              <span className="text-sm">{isDarkMode ? '☀' : '🌙'}</span>
+              <span className="text-sm">{isDarkMode ? '☀️️' : '🌙'}</span>
               <span className="hidden sm:inline text-xs font-semibold">{isDarkMode ? 'Light' : 'Dark'}</span>
             </button>
 
@@ -345,17 +344,19 @@ function App() {
             </div>
           </div>
 
+          {/* 🌟 검색창 영역 (X 버튼 추가 및 우측 패딩 조정) */}
           <div className="w-full md:w-auto md:flex-1 md:max-w-md order-3 md:order-2">
             <div className="relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t('nav.searchPlaceholder', '공원 이름 검색...')}
-                className="w-full bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 focus:border-emerald-500 pl-10 pr-10 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-sm focus:outline-none text-zinc-900 dark:text-white placeholder-zinc-500"
+              <input 
+                type="text" 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+                placeholder={t('nav.searchPlaceholder', '공원 이름 검색...')} 
+                className="w-full bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 focus:border-emerald-500 pl-10 pr-10 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl text-sm focus:outline-none text-zinc-900 dark:text-white placeholder-zinc-500" 
               />
               <span className="absolute left-3.5 top-2.5 sm:top-3 text-zinc-400 text-sm">🔍</span>
               
+              {/* 🌟 검색어가 입력되었을 때만 나타나는 X (전체 삭제) 버튼 */}
               {searchTerm && (
                 <button
                   type="button"
@@ -420,11 +421,11 @@ function App() {
             </div>
 
             {isMobileFilterOpen && (
-              <div
+              <div 
                 className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex justify-center items-end lg:hidden transition-all"
                 onClick={() => setIsMobileFilterOpen(false)}
               >
-                <div
+                <div 
                   className="bg-white dark:bg-zinc-950 w-full max-h-[85vh] overflow-y-auto rounded-t-3xl p-5 sm:p-6 animate-in slide-in-from-bottom-full duration-300 shadow-2xl flex flex-col"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -432,7 +433,7 @@ function App() {
                     <h3 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-x-2">
                       <span>🎛️</span> {t('filters.title', '필터 설정')}
                     </h3>
-                    <button
+                    <button 
                       onClick={() => setIsMobileFilterOpen(false)}
                       className="w-8 h-8 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full flex items-center justify-center text-zinc-600 dark:text-zinc-300 active:scale-90 transition-transform"
                     >
@@ -445,7 +446,7 @@ function App() {
                   </div>
 
                   <div className="sticky bottom-0 pt-4 pb-2 bg-white dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800/50 shrink-0">
-                    <button
+                    <button 
                       onClick={() => setIsMobileFilterOpen(false)}
                       className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 font-bold text-white rounded-2xl active:scale-[0.98] transition-transform shadow-lg shadow-emerald-900/20 text-sm sm:text-base flex items-center justify-center gap-x-2"
                     >
@@ -469,22 +470,16 @@ function App() {
                 )}
 
                 {filteredParks.filter(park => park && Number.isFinite(park.lat) && Number.isFinite(park.lng)).map(park => {
-                    let pinColor = '#ef4444'; // [수정 4]: 기본 색상을 빨강(위험)으로 지정
-
-                    // 산불 위험 등급 데이터에 따라 마커 색상 변경
-                    const risk = (park.risk || '').toLowerCase();
-                    if (risk === 'low' || risk === 'moderate') {
-                      pinColor = '#10b981'; // 에메랄드 (안전/보통)
-                    } else if (risk === 'high') {
-                      pinColor = '#f59e0b'; // 앰버 (주의)
-                    } else if (risk === 'extreme' || risk === 'ban') {
-                      pinColor = '#ef4444'; // 레드 (위험/금지)
-                    } else {
-                      pinColor = '#6b7280'; // 회색 (데이터 없음)
+                    let pinColor = '#ef4444'; 
+                    
+                    if (park.bbq === 'charcoal') { 
+                      pinColor = '#10b981'; 
+                    } else if (park.bbq === 'gas-only') { 
+                      pinColor = '#f59e0b'; 
                     }
 
                     const customIcon = L.divIcon({
-                      className: 'custom-modern-pin',
+                      className: 'custom-modern-pin', 
                       html: `
                         <div style="filter: drop-shadow(0px 3px 4px rgba(0,0,0,0.25)); transition: transform 0.2s;">
                           <svg width="26" height="36" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -494,7 +489,7 @@ function App() {
                         </div>
                       `,
                       iconSize: [26, 36],
-                      iconAnchor: [13, 36]
+                      iconAnchor: [13, 36] 
                     })
                     
                     return (
@@ -507,7 +502,7 @@ function App() {
                       </Marker>
                     )
                   })}
-              </MapContainer>
+              MapContainer>
             </div>
           </div>
 
@@ -522,12 +517,12 @@ function App() {
                   {t('list.sortedBy', { count: filteredParks.length })}
                 </div>
               </div>
-              <button
+              <button 
                 onClick={() => {
                   const listEl = document.getElementById('park-list-container');
                   if (listEl) listEl.scrollTo({ top: 0, behavior: 'smooth' });
                   else window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
+                }} 
                 className="text-xs text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg font-medium"
               >
                 {t('list.top', '맨위로 ↑')}
@@ -566,4 +561,5 @@ function App() {
     </div>
   )
 }
+
 export default App
