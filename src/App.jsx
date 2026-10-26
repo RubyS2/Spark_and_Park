@@ -9,7 +9,8 @@ import ParkCard from './components/ParkCard'
 import { initialParks } from './data/parks'
 import { getVancouverFireRisk, fetchVancouverParks } from './data/fireService'
 import { getGoogleMapsDirectionsUrl, calculateDistanceKm } from './utils/geoUtils'
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from 'firebase/auth' 
+// 파이어베이스 자체 인증 모듈로 교체
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth' 
 import { db } from './firebase'
 import { collection, getDocs, doc, getDoc, setDoc, query, where } from 'firebase/firestore'
 
@@ -88,25 +89,6 @@ function App() {
   const [favoriteParkIds, setFavoriteParkIds] = useState([])
   const [myReviewedParkIds, setMyReviewedParkIds] = useState([])
 
-  // 🔥 파이어베이스 인증 세션 동기화 (새로고침 직후 인증 토큰 지연 문제 해결)
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const userData = {
-          name: user.displayName,
-          picture: user.photoURL,
-          sub: user.uid,
-          email: user.email
-        };
-        setUserProfile(userData);
-        setIsLoggedIn(true);
-        localStorage.setItem('sparkUser', JSON.stringify(userData));
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
   useEffect(() => {
     const fetchUserData = async () => {
       if (userProfile?.sub) {
@@ -139,13 +121,9 @@ function App() {
     fetchUserData()
   }, [userProfile])
 
-  // 🔥 즐겨찾기 저장 시 auth.currentUser 검증 추가
   const toggleFavorite = async (parkId) => {
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
-
-    if (!userProfile || !currentUser) {
-      alert(t('modal.loginRequired', '로그인이 필요합니다.'))
+    if (!userProfile) {
+      alert(t('modal.loginRequired'))
       return
     }
     const isFav = favoriteParkIds.includes(parkId)
@@ -153,13 +131,14 @@ function App() {
     setFavoriteParkIds(newFavs)
 
     try {
-      await setDoc(doc(db, 'userFavorites', currentUser.uid), { parks: newFavs })
+      await setDoc(doc(db, 'userFavorites', userProfile.sub), { parks: newFavs })
     } catch (error) {
       console.error("Error saving favorites:", error)
       alert(t('nav.favUpdateError', '즐겨찾기 업데이트 중 오류가 발생했습니다.'))
     }
   }
 
+  // 🔥 Firebase 자체 인증 로직으로 변경 (보안 강화)
   const handleGoogleLogin = async () => {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
@@ -170,7 +149,7 @@ function App() {
       const userData = {
         name: user.displayName,
         picture: user.photoURL,
-        sub: user.uid,
+        sub: user.uid, // 기존 로직 호환을 위해 uid를 sub에 저장
         email: user.email
       };
       
@@ -506,16 +485,17 @@ function App() {
                 )}
 
                 {filteredParks.filter(park => park && Number.isFinite(park.lat) && Number.isFinite(park.lng)).map(park => {
-                    let pinColor = '#6b7280'; 
+                    let pinColor = '#6b7280'; // 기본 회색
 
+                    // 🔥 필터 UI 색상과 완벽하게 일치하도록 수정
                     const riskStr = String(park.risk || currentFireRisk.riskLevel || '').toLowerCase().trim();
 
                     if (riskStr.includes('high') || riskStr.includes('extreme') || riskStr.includes('ban')) {
-                      pinColor = '#ef4444'; // 위험/금지 - 빨강
+                      pinColor = '#ef4444'; // 위험/금지 (High/Extreme) - 빨강
                     } else if (riskStr.includes('moderate')) {
-                      pinColor = '#f59e0b'; // 주의 - 주황
+                      pinColor = '#f59e0b'; // 주의 (Moderate) - 주황
                     } else if (riskStr.includes('low')) {
-                      pinColor = '#10b981'; // 안전 - 초록
+                      pinColor = '#10b981'; // 안전 (Low) - 초록
                     }
 
                     const customIcon = L.divIcon({
