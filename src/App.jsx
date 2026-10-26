@@ -960,20 +960,12 @@ function App() {
 
                     const riskStr = String(park.risk || currentFireRisk.riskLevel || '').toLowerCase().trim();
 
-
-
-                    if (riskStr.includes('extreme') || riskStr.includes('ban')) {
-
-                      pinColor = '#ef4444'; // 레드 (위험/금지)
-
-                    } else if (riskStr.includes('high')) {
-
-                      pinColor = '#f97316'; // 주황색 (주의)
-
-                    } else if (riskStr.includes('moderate') || riskStr.includes('low')) {
-
-                      pinColor = '#10b981'; // 초록색 (안전/보통)
-
+                    if (riskStr.includes('high') || riskStr.includes('extreme') || riskStr.includes('ban')) {
+                      pinColor = '#ef4444'; // 위험/금지 (High/Extreme) - 빨강
+                    } else if (riskStr.includes('moderate')) {
+                      pinColor = '#f59e0b'; // 주의 (Moderate) - 주황
+                    } else if (riskStr.includes('low')) {
+                      pinColor = '#10b981'; // 안전 (Low) - 초록
                     }
 
 
