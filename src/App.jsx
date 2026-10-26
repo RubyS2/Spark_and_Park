@@ -34,17 +34,17 @@ const fetchAndMergeReviews = async (parksData) => {
     
     snapshot.forEach(doc => {
       const data = doc.data()
-      const pid = data.parkId
+      // [수정]: 타입 불일치로 인한 매칭 실패를 막기 위해 String 강제 변환
+      const pid = String(data.parkId)
       if (!aggregates[pid]) {
         aggregates[pid] = { sum: 0, count: 0 }
       }
-      // [수정 1, 2]: Firestore에서 불러온 별점이 문자열일 경우를 대비해 Number로 강제 변환하여 정확한 평균값 계산
       aggregates[pid].sum += Number(data.rating) || 0
       aggregates[pid].count += 1
     })
 
     return parksData.map(park => {
-      const agg = aggregates[park.id]
+      const agg = aggregates[String(park.id)] // [수정]: String 매칭
       if (agg && agg.count > 0) {
         return {
           ...park,
@@ -52,11 +52,17 @@ const fetchAndMergeReviews = async (parksData) => {
           rating: (agg.sum / agg.count).toFixed(1)
         }
       }
+      // 리뷰가 없으면 더미 데이터 무시하고 0으로 초기화
       return { ...park, reviewCount: 0, rating: '0.0' }
     })
   } catch (error) {
     console.error("Error fetching reviews:", error)
-    return parksData
+    // [수정]: 에러 발생 시에도 랜덤(더미) 데이터를 없애고 0으로 초기화
+    return parksData.map(park => ({
+      ...park,
+      reviewCount: 0,
+      rating: '0.0'
+    }))
   }
 }
 
@@ -469,18 +475,17 @@ function App() {
                 )}
 
                 {filteredParks.filter(park => park && Number.isFinite(park.lat) && Number.isFinite(park.lng)).map(park => {
-                    let pinColor = '#ef4444'; // [수정 4]: 기본 색상을 빨강(위험)으로 지정
+                    let pinColor = '#6b7280'; // 기본 회색
 
-                    // 산불 위험 등급 데이터에 따라 마커 색상 변경
-                    const risk = (park.risk || '').toLowerCase();
-                    if (risk === 'low' || risk === 'moderate') {
-                      pinColor = '#10b981'; // 에메랄드 (안전/보통)
-                    } else if (risk === 'high') {
-                      pinColor = '#f59e0b'; // 앰버 (주의)
-                    } else if (risk === 'extreme' || risk === 'ban') {
+                    // [수정]: 개별 공원 risk가 없을 경우 currentFireRisk 대체 판정 및 명확한 문자열 비교
+                    const riskStr = String(park.risk || currentFireRisk.riskLevel || '').toLowerCase().trim();
+
+                    if (riskStr.includes('extreme') || riskStr.includes('ban')) {
                       pinColor = '#ef4444'; // 레드 (위험/금지)
-                    } else {
-                      pinColor = '#6b7280'; // 회색 (데이터 없음)
+                    } else if (riskStr.includes('high')) {
+                      pinColor = '#f97316'; // 주황색 (주의)
+                    } else if (riskStr.includes('moderate') || riskStr.includes('low')) {
+                      pinColor = '#10b981'; // 초록색 (안전/보통)
                     }
 
                     const customIcon = L.divIcon({
